@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BerryPulse - Wellness & Health Tracker</title>
+  <meta name="description" content="Personalized holistic wellness tracker with Apple Watch sync, nutrition search, customizable habits, hydration, sleep, and mindfulness goals.">
+
+  <!-- Tailwind CSS via CDN with custom Berry theme extension -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            berry: {
+              50: '#fdf2f8',
+              100: '#fce7f3',
+              200: '#fbcfe8',
+              300: '#f472b6',
+              400: '#e11d48',
+              500: '#be123c',
+              600: '#9f1239',
+              700: '#381640',
+              800: '#230f2c',
+              900: '#170b20',
+              950: '#0d0514'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen text-slate-100 selection:bg-pink-500 selection:text-white pb-20">
+
+  <!-- Global Confetti Canvas for Celebrations -->
+  <canvas id="confetti-canvas" class="pointer-events-none fixed inset-0 z-50"></canvas>
+
+  <!-- Global Interactive Chart Tooltip -->
+  <div id="chart-global-tooltip" class="fixed hidden z-40 bg-berry-950/95 border border-pink-500/40 text-white text-xs px-3 py-2 rounded-xl shadow-2xl pointer-events-none transition-opacity duration-150 backdrop-blur-md"></div>
+
+  <!-- Toast Notification Banner -->
+  <div id="app-toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="flex items-center gap-3 bg-berry-900/90 border border-pink-500/50 text-white px-5 py-3.5 rounded-2xl shadow-2xl shadow-pink-900/40 backdrop-blur-lg">
+      <span class="text-xl">🍓</span>
+      <span id="app-toast-text" class="text-sm font-medium">Notification message</span>
+    </div>
+  </div>
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="sticky top-0 z-30 bg-berry-950/80 backdrop-blur-xl border-b border-berry-700/30 px-4 lg:px-8 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- Logo & Brand -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-600/30 pulse-glow">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-pink-400 via-rose-300 to-purple-400 bg-clip-text text-transparent">BerryPulse</h1>
+            <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20">Wellness</span>
+          </div>
+          <p class="text-xs text-berry-300/70">Mind, Movement & Nourishment</p>
+        </div>
+      </div>
+
+      <!-- Date Switcher Navigation -->
+      <div class="flex items-center gap-2 bg-berry-900/60 p-1.5 rounded-2xl border border-berry-700/40 shadow-inner">
+        <button id="btn-prev-day" class="p-2 rounded-xl hover:bg-berry-800/80 text-berry-300 hover:text-white transition" title="Previous day">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+
+        <div class="flex items-center gap-2 px-2 cursor-pointer relative group">
+          <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span id="header-active-date-text" class="text-sm font-semibold text-white tracking-wide">Today, Oct 11</span>
+          <input type="date" id="global-date-picker" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+        </div>
+
+        <button id="btn-next-day" class="p-2 rounded-xl hover:bg-berry-800/80 text-berry-300 hover:text-white transition" title="Next day">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <button id="btn-today" class="text-xs px-3 py-1.5 rounded-xl bg-pink-600/30 text-pink-300 hover:bg-pink-600 hover:text-white transition font-medium border border-pink-500/30">
+          Today
+        </button>
+      </div>
+
+      <!-- Quick Actions Header (Apple Watch status, AI Advisor, Settings, Data Backup) -->
+      <div class="flex items-center gap-2">
+        <button onclick="BerryPulseAIAdvisor.openModal()" 
+          class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold transition shadow-md shadow-pink-600/20" title="AI Health Targets Advisor">
+          <span>✨</span>
+          <span class="hidden sm:inline">AI Health Targets</span>
+        </button>
+
+        <button onclick="BerryPulseAppleWatch.openSyncModal()" 
+          class="flex items-center gap-2 text-xs px-3 py-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/40 text-berry-200 transition">
+          <span class="text-base">⌚</span>
+          <span id="watch-device-name" class="font-medium hidden sm:inline">Apple Watch</span>
+          <span id="watch-status-badge" class="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span> Connected
+          </span>
+        </button>
+
+        <button onclick="BerryPulseApp.openSettingsModal()" class="p-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/40 text-berry-300 hover:text-white transition" title="Edit Goals">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
+
+        <button onclick="document.getElementById('data-modal').classList.remove('hidden'); document.getElementById('data-modal').classList.add('flex');" class="p-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/40 text-berry-300 hover:text-white transition" title="Storage & Backup">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Navigation Tabs Pill Bar -->
+    <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-berry-800/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+      <button data-tab-target="overview" class="tab-btn tab-active px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        📊 Overview
+      </button>
+      <button data-tab-target="nutrition" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        🥗 Nutrition & Calories
+      </button>
+      <button data-tab-target="activity" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        🏃 Activity & Apple Watch
+      </button>
+      <button data-tab-target="habits" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        ✅ Habits Tracker
+      </button>
+      <button data-tab-target="water" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        💧 Hydration
+      </button>
+      <button data-tab-target="sleep" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        🌙 Sleep
+      </button>
+      <button data-tab-target="mindfulness" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        🧘 Mindfulness
+      </button>
+      <button data-tab-target="analytics" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+        📈 Interactive Charts
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-7xl mx-auto px-4 lg:px-8 mt-6">
+
+    <!-- ================= VIEW 1: OVERVIEW DASHBOARD ================= -->
+    <div id="view-overview" class="tab-view-content space-y-6">
+
+      <!-- Hero Streak & Greeting Banner -->
+      <div class="glass-panel p-6 bg-gradient-to-r from-berry-900/80 via-pink-950/40 to-purple-950/50 border border-pink-500/20 relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-pink-400 bg-pink-500/10 px-2.5 py-1 rounded-full border border-pink-500/20">Daily Vitality</span>
+              <span class="text-xs text-amber-300 font-semibold flex items-center gap-1">🔥 7-Day Consistency Streak!</span>
+            </div>
+            <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-1.5">Welcome back to BerryPulse</h2>
+            <p class="text-sm text-berry-200/80 mt-1">Track your nourishment, movement, hydration, sleep, and serene moments in one place.</p>
+          </div>
+
+          <!-- Quick Actions Row -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="BerryPulseAIAdvisor.openModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold shadow-lg shadow-pink-600/30 transition flex items-center gap-1.5">
+              <span>✨ AI Targets</span>
+            </button>
+            <button onclick="BerryPulseNutrition.openAddModal('breakfast')" class="px-3.5 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold shadow-lg shadow-pink-600/30 transition flex items-center gap-1.5">
+              <span>+ Log Meal</span>
+            </button>
+            <button onclick="BerryPulseActivity.openWorkoutModal()" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5">
+              <span>+ Log Workout</span>
+            </button>
+            <button onclick="BerryPulseWater.addWater(16, 'Water Bottle')" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg shadow-sky-600/30 transition flex items-center gap-1.5">
+              <span>💧 +16 oz Water</span>
+            </button>
+            <button onclick="BerryPulseMindfulness.openBreathingModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition flex items-center gap-1.5">
+              <span>🧘 Breathe</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Metric Cards Grid (Apple Rings, Calorie Budget, Hydration, Sleep) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        <!-- 1. Apple Activity Rings Card -->
+        <div class="glass-panel p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-berry-300 uppercase tracking-wider">Activity Rings</span>
+            <button onclick="BerryPulseAppleWatch.openSyncModal()" class="text-xs text-pink-400 hover:text-pink-300 font-semibold flex items-center gap-1">
+              Sync ⌚
+            </button>
+          </div>
+
+          <div class="flex items-center justify-center py-2">
+            <div id="apple-rings-svg-container" class="w-36 h-36"></div>
+          </div>
+
+          <div class="space-y-1.5 text-xs pt-1 border-t border-berry-800/40">
+            <div class="flex items-center justify-between">
+              <span class="text-rose-400 font-medium flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Move</span>
+              <span id="ring-move-label" class="font-bold text-white">480 / 550 CAL</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-emerald-400 font-medium flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Exercise</span>
+              <span id="ring-exercise-label" class="font-bold text-white">35 / 30 MIN</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-cyan-400 font-medium flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Stand</span>
+              <span id="ring-stand-label" class="font-bold text-white">10 / 12 HRS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Daily Calorie Budget Card -->
+        <div class="glass-panel p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-berry-300 uppercase tracking-wider">Nutrition Budget</span>
+            <button onclick="BerryPulseApp.switchTab('nutrition')" class="text-xs text-pink-400 hover:text-pink-300 font-semibold">
+              View Log →
+            </button>
+          </div>
+
+          <div class="my-auto py-2">
+            <div class="flex items-baseline justify-between">
+              <div>
+                <span id="nutrition-consumed-cal" class="text-3xl font-extrabold text-white">1,680</span>
+                <span class="text-xs text-berry-300/80 ml-1">kcal eaten</span>
+              </div>
+              <div class="text-right">
+                <span id="nutrition-remaining-cal" class="text-lg font-bold text-pink-400">520</span>
+                <span id="nutrition-remaining-label" class="text-[11px] text-berry-300/70 block">calories left</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-berry-300/80 mt-2">
+              <span>Budget: <b id="nutrition-goal-cal" class="text-white">2,200</b> kcal</span>
+              <span>Active Burn: <b id="nutrition-burned-cal" class="text-rose-400">480</b> kcal</span>
+              <span class="hidden sm:inline">Net: <b id="nutrition-net-cal" class="text-cyan-400">1,200</b> kcal</span>
+            </div>
+
+            <!-- Calorie Bar -->
+            <div class="w-full bg-berry-950/80 h-2.5 rounded-full mt-3 overflow-hidden border border-berry-800/40">
+              <div id="nutrition-cal-progress-bar" class="h-2.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 transition-all" style="width: 76%;"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-1 text-center pt-2 border-t border-berry-800/40 text-[11px]">
+            <div>
+              <span class="text-rose-400 font-semibold block" id="overview-macro-protein-val">120g</span>
+              <span class="text-berry-400/80">Protein</span>
+            </div>
+            <div>
+              <span class="text-amber-400 font-semibold block" id="overview-macro-carbs-val">180g</span>
+              <span class="text-berry-400/80">Carbs</span>
+            </div>
+            <div>
+              <span class="text-cyan-400 font-semibold block" id="overview-macro-fat-val">52g</span>
+              <span class="text-berry-400/80">Fat</span>
+            </div>
+            <div>
+              <span class="text-emerald-400 font-semibold block" id="overview-macro-fiber-val">30g</span>
+              <span class="text-berry-400/80">Fiber</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Hydration Wave Card -->
+        <div class="glass-panel p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">Water Intake</span>
+            <span id="overview-water-pct-val" class="text-xs font-bold text-cyan-400">71%</span>
+          </div>
+
+          <div class="flex items-center justify-around py-3">
+            <!-- Animated Water Glass -->
+            <div class="water-bottle-container">
+              <div id="overview-water-bottle-wave" class="water-liquid-wave" style="height: 71%;"></div>
+            </div>
+
+            <div class="text-left space-y-1">
+              <span id="overview-water-intake-val" class="text-2xl font-extrabold text-white block">68 oz</span>
+              <span class="text-xs text-berry-300/80 block">Goal: <span id="overview-water-goal-val">96 oz</span></span>
+              <div class="flex items-center gap-1 pt-1">
+                <button onclick="BerryPulseWater.addWater(8, 'Glass')" class="px-2 py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600 text-sky-200 text-xs font-medium transition border border-sky-500/30">+8 oz</button>
+                <button onclick="BerryPulseWater.addWater(16, 'Bottle')" class="px-2 py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600 text-sky-200 text-xs font-medium transition border border-sky-500/30">+16 oz</button>
+              </div>
+            </div>
+          </div>
+
+          <p id="overview-water-remaining-val" class="text-[11px] text-cyan-300/80 text-center pt-2 border-t border-berry-800/40">
+            28 oz remaining to target
+          </p>
+        </div>
+
+        <!-- 4. Sleep & Recovery Card -->
+        <div class="glass-panel p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">Sleep & Rest</span>
+            <span id="overview-sleep-quality-text" class="text-xs text-purple-400 font-semibold">Deep 😴</span>
+          </div>
+
+          <div class="my-auto py-2">
+            <div class="flex items-baseline justify-between">
+              <span id="overview-sleep-duration-val" class="text-3xl font-extrabold text-white">7h 45m</span>
+              <span class="text-xs text-purple-300/80" id="overview-sleep-debt-val">+0.0h vs 8h goal</span>
+            </div>
+
+            <!-- Sleep Stages Segmented Bar -->
+            <div class="w-full h-2 rounded-full overflow-hidden flex gap-0.5 mt-3 bg-berry-950/80">
+              <div id="overview-sleep-stage-deep-bar" class="h-full bg-indigo-500" style="width: 22%;" title="Deep Sleep"></div>
+              <div id="overview-sleep-stage-rem-bar" class="h-full bg-purple-500" style="width: 24%;" title="REM Sleep"></div>
+              <div id="overview-sleep-stage-light-bar" class="h-full bg-blue-500" style="width: 46%;" title="Light Sleep"></div>
+              <div id="overview-sleep-stage-awake-bar" class="h-full bg-amber-500" style="width: 8%;" title="Awake"></div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-berry-800/40 text-xs text-berry-300/80">
+            <span>Mindfulness: <b id="mindfulness-completed-mins" class="text-white">15 min</b></span>
+            <button onclick="BerryPulseMindfulness.openBreathingModal()" class="text-pink-400 hover:underline">Start Breathwork →</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Mid Section: Daily Habits Checklist & Today's Meals Side-by-Side -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Habits Checklist Box -->
+        <div class="glass-panel p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <span>✅ Daily Habits</span>
+                <span id="habits-completion-pct" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30">62%</span>
+              </h3>
+              <p id="habits-completion-count" class="text-xs text-berry-300/70 mt-0.5">5 of 8 completed today</p>
+            </div>
+            <button onclick="BerryPulseHabits.openAddModal()" class="text-xs px-3 py-1.5 rounded-xl bg-berry-800/80 hover:bg-pink-600 text-pink-300 hover:text-white font-semibold transition border border-berry-700/50">
+              + Add Habit
+            </button>
+          </div>
+
+          <!-- Habit progress bar -->
+          <div class="w-full bg-berry-950/80 h-2 rounded-full mb-4 overflow-hidden">
+            <div id="habits-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-600 transition-all duration-500" style="width: 62%;"></div>
+          </div>
+
+          <!-- Habit items list -->
+          <div id="habits-overview-list-container" class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Today's Nutrition Breakdown & Search Quick Entry -->
+        <div class="glass-panel p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <span>🥗 Today's Meals & Nutrition</span>
+              </h3>
+              <p class="text-xs text-berry-300/70 mt-0.5">Click "+ Add Food" to search database and auto-populate macros</p>
+            </div>
+            <button onclick="BerryPulseNutrition.openAddModal('breakfast')" class="text-xs px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold transition shadow-md shadow-pink-600/30">
+              + Add Food Item
+            </button>
+          </div>
+
+          <!-- Meal Accordions -->
+          <div class="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+            
+            <!-- Breakfast -->
+            <div class="bg-berry-900/40 rounded-2xl p-3.5 border border-berry-700/30">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-bold text-white flex items-center gap-2">🍳 Breakfast <span id="meal-cals-breakfast" class="text-xs font-normal text-pink-400">450 kcal</span></span>
+                <button onclick="BerryPulseNutrition.openAddModal('breakfast')" class="text-xs text-pink-400 hover:text-pink-300 font-semibold">+ Add</button>
+              </div>
+              <div id="meal-items-breakfast" class="space-y-1"></div>
+            </div>
+
+            <!-- Lunch -->
+            <div class="bg-berry-900/40 rounded-2xl p-3.5 border border-berry-700/30">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-bold text-white flex items-center gap-2">🥗 Lunch <span id="meal-cals-lunch" class="text-xs font-normal text-pink-400">620 kcal</span></span>
+                <button onclick="BerryPulseNutrition.openAddModal('lunch')" class="text-xs text-pink-400 hover:text-pink-300 font-semibold">+ Add</button>
+              </div>
+              <div id="meal-items-lunch" class="space-y-1"></div>
+            </div>
+
+            <!-- Dinner -->
+            <div class="bg-berry-900/40 rounded-2xl p-3.5 border border-berry-700/30">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-bold text-white flex items-center gap-2">🍲 Dinner <span id="meal-cals-dinner" class="text-xs font-normal text-pink-400">500 kcal</span></span>
+                <button onclick="BerryPulseNutrition.openAddModal('dinner')" class="text-xs text-pink-400 hover:text-pink-300 font-semibold">+ Add</button>
+              </div>
+              <div id="meal-items-dinner" class="space-y-1"></div>
+            </div>
+
+            <!-- Snacks -->
+            <div class="bg-berry-900/40 rounded-2xl p-3.5 border border-berry-700/30">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-bold text-white flex items-center gap-2">🍓 Snacks & Berries <span id="meal-cals-snacks" class="text-xs font-normal text-pink-400">220 kcal</span></span>
+                <button onclick="BerryPulseNutrition.openAddModal('snacks')" class="text-xs text-pink-400 hover:text-pink-300 font-semibold">+ Add</button>
+              </div>
+              <div id="meal-items-snacks" class="space-y-1"></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 2: NUTRITION & CALORIES FULL VIEW ================= -->
+    <div id="view-nutrition" class="tab-view-content hidden space-y-6">
+      
+      <!-- Nutrition Header Card with Macro Splitting -->
+      <div class="glass-panel p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-white">🥗 Calories & Macronutrient Tracker</h2>
+            <p class="text-xs text-berry-300/80 mt-1">Search whole foods, snacks, meals, and berry favorites with instant nutrient auto-population.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="BerryPulseNutrition.addCustomMealSection()" class="px-3 py-2 rounded-xl bg-berry-800 hover:bg-berry-700 text-berry-200 text-xs font-semibold transition border border-berry-700/40">
+              + New Meal Category
+            </button>
+            <button onclick="BerryPulseNutrition.switchToCustomFoodMode('')" class="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold shadow-md transition">
+              ➕ Create Custom Food
+            </button>
+          </div>
+        <!-- Daily Calorie Budget Equation Bar -->
+        <div class="bg-berry-950/70 p-4 rounded-2xl border border-berry-800/50 mb-5 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3 sm:gap-6">
+            <div>
+              <span class="text-[11px] text-berry-300/80 block font-medium">Daily Budget</span>
+              <div class="flex items-baseline gap-1">
+                <span id="tab-nutrition-goal-cal" class="text-xl font-extrabold text-white">2,200</span>
+                <span class="text-xs text-berry-400 font-semibold">kcal</span>
+              </div>
+            </div>
+            <span class="text-berry-500 font-bold text-lg">−</span>
+            <div>
+              <span class="text-[11px] text-berry-300/80 block font-medium">Food Consumed</span>
+              <div class="flex items-baseline gap-1">
+                <span id="tab-nutrition-consumed-cal" class="text-xl font-extrabold text-pink-400">1,680</span>
+                <span class="text-xs text-pink-300/80 font-semibold">kcal</span>
+              </div>
+            </div>
+            <span class="text-berry-500 font-bold text-lg">=</span>
+            <div>
+              <span id="tab-nutrition-remaining-label" class="text-[11px] text-emerald-300 block font-medium">Calories Left</span>
+              <div class="flex items-baseline gap-1">
+                <span id="tab-nutrition-remaining-cal" class="text-xl font-extrabold text-emerald-400">520</span>
+                <span class="text-xs text-emerald-300/80 font-semibold">kcal</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <div class="text-right">
+              <span class="text-[11px] text-berry-300/70 block">Apple Move Active Burn</span>
+              <span id="tab-nutrition-burned-cal" class="text-xs font-bold text-rose-400">480 kcal</span>
+            </div>
+            <button onclick="BerryPulseApp.openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-xs font-semibold text-berry-200 hover:text-white transition">
+              ⚙️ Edit Budget
+            </button>
+          </div>
+        </div>
+
+        <!-- Macronutrient Bars -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-berry-950/60 p-4 rounded-2xl border border-berry-800/40">
+            <div class="flex justify-between text-xs font-semibold mb-1.5">
+              <span class="text-rose-400">🥩 Protein</span>
+              <span id="macro-protein-val" class="text-white">120g / 140g</span>
+            </div>
+            <div class="w-full bg-berry-900/60 h-2 rounded-full overflow-hidden">
+              <div id="macro-protein-bar" class="h-full bg-rose-500 rounded-full transition-all" style="width: 85%;"></div>
+            </div>
+          </div>
+
+          <div class="bg-berry-950/60 p-4 rounded-2xl border border-berry-800/40">
+            <div class="flex justify-between text-xs font-semibold mb-1.5">
+              <span class="text-amber-400">🌾 Carbohydrates</span>
+              <span id="macro-carbs-val" class="text-white">180g / 220g</span>
+            </div>
+            <div class="w-full bg-berry-900/60 h-2 rounded-full overflow-hidden">
+              <div id="macro-carbs-bar" class="h-full bg-amber-500 rounded-full transition-all" style="width: 81%;"></div>
+            </div>
+          </div>
+
+          <div class="bg-berry-950/60 p-4 rounded-2xl border border-berry-800/40">
+            <div class="flex justify-between text-xs font-semibold mb-1.5">
+              <span class="text-cyan-400">🥑 Healthy Fats</span>
+              <span id="macro-fat-val" class="text-white">52g / 65g</span>
+            </div>
+            <div class="w-full bg-berry-900/60 h-2 rounded-full overflow-hidden">
+              <div id="macro-fat-bar" class="h-full bg-cyan-500 rounded-full transition-all" style="width: 80%;"></div>
+            </div>
+          </div>
+
+          <div class="bg-berry-950/60 p-4 rounded-2xl border border-berry-800/40">
+            <div class="flex justify-between text-xs font-semibold mb-1.5">
+              <span class="text-emerald-400">🫐 Dietary Fiber</span>
+              <span id="macro-fiber-val" class="text-white">30g / 35g</span>
+            </div>
+            <div class="w-full bg-berry-900/60 h-2 rounded-full overflow-hidden">
+              <div id="macro-fiber-bar" class="h-full bg-emerald-500 rounded-full transition-all" style="width: 85%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meal Sections Full List -->
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          
+          <!-- Breakfast Card -->
+          <div class="glass-panel p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-berry-800/40">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-xl bg-berry-800/70">🍳</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Breakfast</h3>
+                  <span id="meal-cals-breakfast" class="text-xs text-pink-400 font-semibold">0 kcal</span>
+                </div>
+              </div>
+              <button onclick="BerryPulseNutrition.openAddModal('breakfast')" class="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition">
+                + Search & Add
+              </button>
+            </div>
+            <div id="meal-items-breakfast" class="divide-y divide-berry-800/30 mt-2"></div>
+          </div>
+
+          <!-- Lunch Card -->
+          <div class="glass-panel p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-berry-800/40">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-xl bg-berry-800/70">🥗</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Lunch</h3>
+                  <span id="meal-cals-lunch" class="text-xs text-pink-400 font-semibold">0 kcal</span>
+                </div>
+              </div>
+              <button onclick="BerryPulseNutrition.openAddModal('lunch')" class="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition">
+                + Search & Add
+              </button>
+            </div>
+            <div id="meal-items-lunch" class="divide-y divide-berry-800/30 mt-2"></div>
+          </div>
+
+          <!-- Dinner Card -->
+          <div class="glass-panel p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-berry-800/40">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-xl bg-berry-800/70">🍲</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Dinner</h3>
+                  <span id="meal-cals-dinner" class="text-xs text-pink-400 font-semibold">0 kcal</span>
+                </div>
+              </div>
+              <button onclick="BerryPulseNutrition.openAddModal('dinner')" class="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition">
+                + Search & Add
+              </button>
+            </div>
+            <div id="meal-items-dinner" class="divide-y divide-berry-800/30 mt-2"></div>
+          </div>
+
+          <!-- Snacks & Berries Card -->
+          <div class="glass-panel p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-berry-800/40">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-xl bg-berry-800/70">🍓</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Snacks & Berries</h3>
+                  <span id="meal-cals-snacks" class="text-xs text-pink-400 font-semibold">0 kcal</span>
+                </div>
+              </div>
+              <button onclick="BerryPulseNutrition.openAddModal('snacks')" class="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition">
+                + Search & Add
+              </button>
+            </div>
+            <div id="meal-items-snacks" class="divide-y divide-berry-800/30 mt-2"></div>
+          </div>
+
+        </div>
+
+        <!-- Custom Meals Container -->
+        <div id="custom-meals-container" class="space-y-4"></div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 3: PHYSICAL ACTIVITY & APPLE WATCH ================= -->
+    <div id="view-activity" class="tab-view-content hidden space-y-6">
+
+      <!-- Apple Watch Hero Card -->
+      <div class="glass-panel p-6 bg-gradient-to-br from-berry-950 via-berry-900/50 to-pink-950/30 border border-pink-500/20">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+          
+          <div class="flex items-center gap-5">
+            <div class="w-16 h-16 rounded-2xl bg-black border border-slate-700 p-2 flex items-center justify-center shadow-2xl">
+              <span class="text-3xl">⌚</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-xl font-bold text-white" id="watch-device-name">Apple Watch Ultra 2</h3>
+                <span id="watch-status-badge" class="text-xs text-emerald-400 font-semibold">Connected</span>
+              </div>
+              <p class="text-xs text-berry-300/80 mt-1">
+                <span id="watch-battery-level">84% Battery</span> • <span id="watch-last-sync-time">Synced 12m ago</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Watch Actions -->
+          <div class="flex items-center gap-3">
+            <button onclick="BerryPulseAppleWatch.openSyncModal()" class="px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition shadow-lg shadow-pink-600/30 flex items-center gap-2">
+              <span>⌚ Apple Watch Sync Hub</span>
+            </button>
+            <button onclick="BerryPulseActivity.openWorkoutModal()" class="px-4 py-2.5 rounded-xl bg-berry-800 hover:bg-berry-700 text-berry-200 text-xs font-semibold transition border border-berry-700/50">
+              + Manual Workout
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Apple Watch Health Metrics Bar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-5 border-t border-berry-800/40 text-center">
+          <div>
+            <span class="text-xs text-berry-400 block font-medium">Daily Steps</span>
+            <span id="activity-steps-val" class="text-2xl font-extrabold text-white">8,940</span>
+          </div>
+          <div>
+            <span class="text-xs text-berry-400 block font-medium">Distance</span>
+            <span id="activity-distance-val" class="text-2xl font-extrabold text-white">6.8 km</span>
+          </div>
+          <div>
+            <span class="text-xs text-berry-400 block font-medium">Avg Heart Rate</span>
+            <span id="activity-heartrate-val" class="text-2xl font-extrabold text-rose-400">68 BPM</span>
+          </div>
+          <div>
+            <span class="text-xs text-berry-400 block font-medium">Workout Time</span>
+            <span id="activity-total-workout-mins" class="text-2xl font-extrabold text-emerald-400">35 mins</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logged Workouts Feed -->
+      <div class="glass-panel p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-base font-bold text-white">Today's Workout Sessions</h3>
+            <p class="text-xs text-berry-300/70">Synced from Apple Watch or manually entered</p>
+          </div>
+          <span id="activity-total-workout-cals" class="text-sm font-bold text-rose-400">0 kcal burned</span>
+        </div>
+
+        <div id="workouts-list-container" class="space-y-3"></div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 4: HABITS TRACKER ================= -->
+    <div id="view-habits" class="tab-view-content hidden space-y-6">
+      
+      <div class="glass-panel p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-white">✅ Daily Habits & Routines</h2>
+            <p class="text-xs text-berry-300/80 mt-1">Build unbreakable streaks with customizable daily habits across mind, body, and nutrition.</p>
+          </div>
+          <button onclick="BerryPulseHabits.openAddModal()" class="px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold shadow-md transition">
+            + Create Custom Habit
+          </button>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-berry-800/40">
+          <button onclick="BerryPulseHabits.setFilter('all')" data-habit-filter="all" class="habit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-md border border-pink-500 transition">All</button>
+          <button onclick="BerryPulseHabits.setFilter('Body')" data-habit-filter="Body" class="habit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-berry-900 text-berry-300 hover:text-white border border-berry-700/40 transition">Body</button>
+          <button onclick="BerryPulseHabits.setFilter('Mind')" data-habit-filter="Mind" class="habit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-berry-900 text-berry-300 hover:text-white border border-berry-700/40 transition">Mind</button>
+          <button onclick="BerryPulseHabits.setFilter('Movement')" data-habit-filter="Movement" class="habit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-berry-900 text-berry-300 hover:text-white border border-berry-700/40 transition">Movement</button>
+          <button onclick="BerryPulseHabits.setFilter('Nutrition')" data-habit-filter="Nutrition" class="habit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-berry-900 text-berry-300 hover:text-white border border-berry-700/40 transition">Nutrition</button>
+          <button onclick="BerryPulseHabits.setFilter('Sleep')" data-habit-filter="Sleep" class="habit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-berry-900 text-berry-300 hover:text-white border border-berry-700/40 transition">Sleep</button>
+        </div>
+
+        <div id="habits-dedicated-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 5: HYDRATION ================= -->
+    <div id="view-water" class="tab-view-content hidden space-y-6">
+      
+      <div class="glass-panel p-6">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+          
+          <div class="flex items-center gap-8">
+            <!-- Large Animated Water Glass -->
+            <div class="water-bottle-container !w-[110px] !h-[200px]">
+              <div id="water-bottle-wave" class="water-liquid-wave" style="height: 71%;"></div>
+            </div>
+
+            <div>
+              <span class="text-xs text-cyan-400 uppercase tracking-wider font-bold">Hydration Level</span>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="water-intake-val" class="text-4xl font-extrabold text-white">68</span>
+                <span id="water-goal-val" class="text-sm text-cyan-300/80">/ 96 oz</span>
+              </div>
+              <p id="water-remaining-val" class="text-xs text-berry-300/70 mt-1">28 oz remaining to target</p>
+
+              <!-- Quick Log Buttons in Fluid Ounces -->
+              <div class="flex flex-wrap gap-2 mt-4">
+                <button onclick="BerryPulseWater.addWater(8, 'Glass')" class="px-3 py-1.5 rounded-xl bg-sky-600/30 hover:bg-sky-600 text-sky-200 text-xs font-semibold transition border border-sky-500/30">+8 oz (Glass)</button>
+                <button onclick="BerryPulseWater.addWater(16, 'Bottle')" class="px-3 py-1.5 rounded-xl bg-sky-600/30 hover:bg-sky-600 text-sky-200 text-xs font-semibold transition border border-sky-500/30">+16 oz (Bottle)</button>
+                <button onclick="BerryPulseWater.addWater(24, 'Sports Flask')" class="px-3 py-1.5 rounded-xl bg-sky-600/30 hover:bg-sky-600 text-sky-200 text-xs font-semibold transition border border-sky-500/30">+24 oz (Flask)</button>
+                <button onclick="BerryPulseWater.addWater(32, 'Hydro Flask')" class="px-3 py-1.5 rounded-xl bg-sky-600/30 hover:bg-sky-600 text-sky-200 text-xs font-semibold transition border border-sky-500/30">+32 oz (Hydro Flask)</button>
+                <button onclick="BerryPulseWater.promptCustomWater()" class="px-3 py-1.5 rounded-xl bg-berry-800 hover:bg-berry-700 text-berry-200 text-xs font-semibold transition border border-berry-700/50">+ Custom oz</button>
+                <button onclick="BerryPulseWater.undoWater(8)" class="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900 text-rose-300 text-xs font-semibold transition border border-rose-800/40">-8 oz</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full md:w-72 bg-berry-950/60 p-4 rounded-2xl border border-berry-800/40">
+            <div class="flex items-center justify-between pb-2 border-b border-berry-800/40">
+              <span class="text-xs font-bold text-white">Today's Logs</span>
+              <button onclick="BerryPulseWater.editDailyGoal()" class="text-xs text-cyan-400 hover:underline">Edit Goal</button>
+            </div>
+            <div id="water-logs-list" class="space-y-1.5 mt-2.5 max-h-48 overflow-y-auto"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 6: SLEEP ================= -->
+    <div id="view-sleep" class="tab-view-content hidden space-y-6">
+      
+      <div class="glass-panel p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-bold text-white">🌙 Sleep Duration & Recovery</h2>
+              <div id="sleep-source-badge">
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-900/40 text-purple-200 border border-purple-500/30 text-xs font-semibold">
+                  ⌚ Source: Apple Watch Ultra 2
+                </span>
+              </div>
+            </div>
+            <p class="text-xs text-berry-300/80 mt-1">Connect with Apple Watch, import official Apple Health records, or enter manually.</p>
+          </div>
+          <div id="sleep-debt-val" class="text-xs text-purple-300 font-semibold px-3 py-1.5 rounded-xl bg-purple-900/40 border border-purple-700/40">
+            +0.0h vs 8h goal
+          </div>
+        </div>
+
+        <!-- 3-Way Mode Switcher (Apple Watch / Apple Health / Manual) -->
+        <div class="p-1 bg-berry-900/60 rounded-2xl border border-berry-800/60 flex items-center gap-2 mb-6 text-xs max-w-xl">
+          <button id="sleep-mode-btn-watch" onclick="BerryPulseSleep.setInputMode('watch')" 
+            class="flex-1 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-md transition flex items-center justify-center gap-1.5">
+            <span>⌚ Apple Watch</span>
+          </button>
+          <button id="sleep-mode-btn-health" onclick="BerryPulseSleep.setInputMode('health')" 
+            class="flex-1 py-2 rounded-xl text-xs font-medium text-berry-300 hover:text-white transition flex items-center justify-center gap-1.5">
+            <span>🍏 Apple Health</span>
+          </button>
+          <button id="sleep-mode-btn-manual" onclick="BerryPulseSleep.setInputMode('manual')" 
+            class="flex-1 py-2 rounded-xl text-xs font-medium text-berry-300 hover:text-white transition flex items-center justify-center gap-1.5">
+            <span>✍️ Manual Entry</span>
+          </button>
+        </div>
+
+        <!-- MODE 1: APPLE WATCH LIVE SYNC PANEL -->
+        <div id="sleep-mode-panel-watch" class="mb-6 p-5 rounded-2xl bg-berry-950/60 border border-purple-500/30 space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-black border border-slate-700 flex items-center justify-center text-2xl shadow-lg">
+                ⌚
+              </div>
+              <div>
+                <h4 class="font-bold text-white text-sm">Apple Watch Sleep Sensor Stream</h4>
+                <p class="text-xs text-emerald-400 font-semibold">● Paired & Monitoring Sleep Architecture</p>
+              </div>
+            </div>
+
+            <!-- Apple Watch Sleep Sync Action -->
+            <button id="btn-sync-sleep-watch" onclick="BerryPulseSleep.syncAppleWatchSleep()" 
+              class="px-4 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-pink-600/30 transition flex items-center gap-2">
+              <span>🔄 Sync Sleep from Apple Watch Now</span>
+            </button>
+          </div>
+
+          <!-- Watch Biometric Sensors Display -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-berry-800/40 text-xs">
+            <div class="p-2.5 rounded-xl bg-berry-900/50 border border-berry-800/40">
+              <span class="text-berry-400 block text-[11px]">Resting Sleep HR</span>
+              <span id="sleep-sensor-hr" class="text-base font-extrabold text-rose-400">52 BPM</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-berry-900/50 border border-berry-800/40">
+              <span class="text-berry-400 block text-[11px]">Respiratory Rate</span>
+              <span id="sleep-sensor-resp" class="text-base font-extrabold text-cyan-400">14.5 br/min</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-berry-900/50 border border-berry-800/40">
+              <span class="text-berry-400 block text-[11px]">Time In Bed</span>
+              <span id="sleep-sensor-timeinbed" class="text-base font-extrabold text-white">8h 15m</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-berry-900/50 border border-berry-800/40">
+              <span class="text-berry-400 block text-[11px]">Wrist Temp Baseline</span>
+              <span id="sleep-sensor-temp" class="text-base font-extrabold text-emerald-400">-0.2°F (Normal)</span>
+            </div>
+          </div>
+
+          <!-- Sync Progress Bar -->
+          <div class="space-y-1.5">
+            <div id="watch-sleep-sync-status" class="hidden text-xs text-pink-300 font-semibold animate-pulse"></div>
+            <div class="w-full bg-berry-900 h-1.5 rounded-full overflow-hidden">
+              <div id="watch-sleep-sync-bar" class="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODE 2: APPLE HEALTH FILE IMPORT PANEL -->
+        <div id="sleep-mode-panel-health" class="hidden mb-6 p-5 rounded-2xl bg-berry-950/60 border border-emerald-500/30 space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-2xl shadow-lg">
+                🍏
+              </div>
+              <div>
+                <h4 class="font-bold text-white text-sm">Apple Health Sleep Analysis Import</h4>
+                <p class="text-xs text-berry-300/80">Parses HKCategoryTypeIdentifierSleepAnalysis (Deep, Core, REM, Awake)</p>
+              </div>
+            </div>
+
+            <!-- Choose file input -->
+            <label class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 cursor-pointer transition flex items-center gap-2">
+              <span>📂 Select Apple Health Export (.xml / .json)</span>
+              <input type="file" accept=".xml,.json" onchange="BerryPulseSleep.handleHealthSleepImport(event)" class="hidden">
+            </label>
+          </div>
+          <p class="text-[11px] text-berry-400">Export your data directly from your iPhone Health app (Settings > Export All Health Data) and upload it here.</p>
+        </div>
+
+        <!-- MODE 3: MANUAL ENTRY PANEL -->
+        <div id="sleep-mode-panel-manual" class="hidden mb-6 p-5 rounded-2xl bg-berry-950/60 border border-pink-500/30 space-y-4">
+          <div class="flex items-center gap-2 pb-2 border-b border-berry-800/40">
+            <span class="text-xl">✍️</span>
+            <h4 class="font-bold text-white text-sm">Manual Sleep & Stage Adjustment</h4>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="text-xs text-berry-300 block mb-1">Deep Sleep (%)</label>
+              <input type="number" id="sleep-stage-input-deep" min="0" max="100" value="22" 
+                class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400">
+            </div>
+            <div>
+              <label class="text-xs text-berry-300 block mb-1">REM Sleep (%)</label>
+              <input type="number" id="sleep-stage-input-rem" min="0" max="100" value="24" 
+                class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400">
+            </div>
+            <div>
+              <label class="text-xs text-berry-300 block mb-1">Light / Core (%)</label>
+              <input type="number" id="sleep-stage-input-light" min="0" max="100" value="46" 
+                class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400">
+            </div>
+            <div>
+              <label class="text-xs text-berry-300 block mb-1">Awake (%)</label>
+              <input type="number" id="sleep-stage-input-awake" min="0" max="100" value="8" 
+                class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+            </div>
+          </div>
+        </div>
+
+        <!-- Universal Sleep Overview Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Sleep Inputs & Duration -->
+          <div class="space-y-4 bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <h3 class="text-sm font-bold text-white">Bedtime & Wake Up</h3>
+            
+            <div>
+              <label class="text-xs text-berry-300 block mb-1">Bedtime</label>
+              <input type="time" id="sleep-bedtime-input" class="w-full bg-berry-900/80 border border-berry-700/50 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+            </div>
+
+            <div>
+              <label class="text-xs text-berry-300 block mb-1">Wake Time</label>
+              <input type="time" id="sleep-waketime-input" class="w-full bg-berry-900/80 border border-berry-700/50 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+            </div>
+
+            <div class="pt-2">
+              <span class="text-xs text-berry-400 block">Total Sleep</span>
+              <span id="sleep-duration-val" class="text-3xl font-extrabold text-white">7h 45m</span>
+              <span id="sleep-total-minutes-val" class="text-xs text-berry-300/70 block mt-0.5">465 minutes asleep</span>
+            </div>
+          </div>
+
+          <!-- Quality Ratings -->
+          <div class="space-y-4 bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <h3 class="text-sm font-bold text-white">Sleep Quality Rating</h3>
+            
+            <div class="space-y-2">
+              <button onclick="BerryPulseSleep.setRating(5)" data-rating="5" class="sleep-rating-btn w-full p-2.5 rounded-xl text-xs font-semibold border flex items-center justify-between transition bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500">
+                <span>😴 Deep & Restorative</span><span>5 ★</span>
+              </button>
+              <button onclick="BerryPulseSleep.setRating(4)" data-rating="4" class="sleep-rating-btn w-full p-2.5 rounded-xl text-xs font-semibold border flex items-center justify-between transition bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500">
+                <span>😊 Good & Refreshing</span><span>4 ★</span>
+              </button>
+              <button onclick="BerryPulseSleep.setRating(3)" data-rating="3" class="sleep-rating-btn w-full p-2.5 rounded-xl text-xs font-semibold border flex items-center justify-between transition bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500">
+                <span>😐 Fair / Average</span><span>3 ★</span>
+              </button>
+              <button onclick="BerryPulseSleep.setRating(2)" data-rating="2" class="sleep-rating-btn w-full p-2.5 rounded-xl text-xs font-semibold border flex items-center justify-between transition bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500">
+                <span>🥱 Poor Sleep</span><span>2 ★</span>
+              </button>
+              <button onclick="BerryPulseSleep.setRating(1)" data-rating="1" class="sleep-rating-btn w-full p-2.5 rounded-xl text-xs font-semibold border flex items-center justify-between transition bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500">
+                <span>😫 Terrible / Restless</span><span>1 ★</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sleep Stages & Hygiene Tags -->
+          <div class="space-y-4 bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <h3 class="text-sm font-bold text-white">Stages & Environment</h3>
+
+            <div>
+              <span class="text-xs text-berry-300 block mb-1.5">Sleep Architecture Breakdown</span>
+              <div class="w-full h-2.5 rounded-full overflow-hidden flex gap-0.5 bg-berry-950">
+                <div id="sleep-stage-deep-bar" class="h-full bg-indigo-500" style="width: 22%;" title="Deep Sleep"></div>
+                <div id="sleep-stage-rem-bar" class="h-full bg-purple-500" style="width: 24%;" title="REM Sleep"></div>
+                <div id="sleep-stage-light-bar" class="h-full bg-blue-500" style="width: 46%;" title="Light / Core Sleep"></div>
+                <div id="sleep-stage-awake-bar" class="h-full bg-amber-500" style="width: 8%;" title="Awake"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-berry-300/70 mt-1 font-medium">
+                <span>Deep: <b id="sleep-stage-deep-pct-text" class="text-indigo-400">22%</b></span>
+                <span>REM: <b id="sleep-stage-rem-pct-text" class="text-purple-400">24%</b></span>
+                <span>Light: <b id="sleep-stage-light-pct-text" class="text-blue-400">46%</b></span>
+                <span>Awake: <b id="sleep-stage-awake-pct-text" class="text-amber-400">8%</b></span>
+              </div>
+            </div>
+
+            <div>
+              <span class="text-xs text-berry-300 block mb-2">Sleep Environment Tags</span>
+              <div id="sleep-tags-container" class="flex flex-wrap gap-1.5"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 7: MINDFULNESS ================= -->
+    <div id="view-mindfulness" class="tab-view-content hidden space-y-6">
+      
+      <div class="glass-panel p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-white">🧘 Mindfulness, Breath & Gratitude</h2>
+            <p class="text-xs text-berry-300/80 mt-1">Calm your nervous system with interactive guided breathing or record daily gratitude.</p>
+          </div>
+          <button onclick="BerryPulseMindfulness.openBreathingModal()" class="px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold shadow-md transition flex items-center gap-2">
+            <span>✨ Launch Guided Breathing Visualizer</span>
+          </button>
+        </div>
+
+        <!-- Mindfulness Daily Goal Progress Banner -->
+        <div class="mb-6 p-4 rounded-2xl bg-berry-950/60 border border-purple-500/20">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="text-purple-300 font-semibold">Daily Mindfulness Progress: <span id="mindfulness-completed-mins" class="text-white font-bold">15 min</span> / <span id="mindfulness-target-mins" class="text-white">15 min</span></span>
+            <span id="mindfulness-pct" class="text-pink-400 font-bold">100%</span>
+          </div>
+          <div class="w-full bg-berry-900/60 h-2.5 rounded-full overflow-hidden">
+            <div id="mindfulness-progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Daily Mood Check-In -->
+          <div class="bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40 space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center justify-between">
+              <span>Daily Mood Check-In</span>
+              <span id="mindfulness-current-mood" class="text-xs text-purple-300 font-semibold">🧘 Calm</span>
+            </h3>
+
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="BerryPulseMindfulness.setMood('Joyful', '✨')" data-mood="Joyful" class="mood-chip-btn p-3 rounded-xl text-xs font-medium border bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500 transition text-center">
+                <span class="text-xl block mb-1">✨</span> Joyful
+              </button>
+              <button onclick="BerryPulseMindfulness.setMood('Calm', '🧘')" data-mood="Calm" class="mood-chip-btn p-3 rounded-xl text-xs font-medium border bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500 transition text-center">
+                <span class="text-xl block mb-1">🧘</span> Calm
+              </button>
+              <button onclick="BerryPulseMindfulness.setMood('Energetic', '⚡')" data-mood="Energetic" class="mood-chip-btn p-3 rounded-xl text-xs font-medium border bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500 transition text-center">
+                <span class="text-xl block mb-1">⚡</span> Energetic
+              </button>
+              <button onclick="BerryPulseMindfulness.setMood('Grateful', '🌸')" data-mood="Grateful" class="mood-chip-btn p-3 rounded-xl text-xs font-medium border bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500 transition text-center">
+                <span class="text-xl block mb-1">🌸</span> Grateful
+              </button>
+              <button onclick="BerryPulseMindfulness.setMood('Anxious', '🌪️')" data-mood="Anxious" class="mood-chip-btn p-3 rounded-xl text-xs font-medium border bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500 transition text-center">
+                <span class="text-xl block mb-1">🌪️</span> Anxious
+              </button>
+              <button onclick="BerryPulseMindfulness.setMood('Tired', '🌙')" data-mood="Tired" class="mood-chip-btn p-3 rounded-xl text-xs font-medium border bg-berry-900/40 border-berry-700/40 text-berry-300 hover:border-pink-500 transition text-center">
+                <span class="text-xl block mb-1">🌙</span> Tired
+              </button>
+            </div>
+          </div>
+
+          <!-- Gratitude Journal -->
+          <div class="bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40 space-y-3">
+            <h3 class="text-sm font-bold text-white">Daily Gratitude Journal</h3>
+            <p class="text-xs text-berry-300/70">What are 3 things bringing you joy or peace today?</p>
+            <textarea id="mindfulness-gratitude-input" rows="4" placeholder="Today I am grateful for..."
+              class="w-full bg-berry-900/80 border border-berry-700/50 rounded-xl p-3 text-sm text-white placeholder-berry-400/50 focus:outline-none focus:border-pink-500 resize-none"></textarea>
+            <span class="text-[11px] text-berry-400 block text-right">Autosaved to local storage</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 8: INTERACTIVE CHARTS & ANALYTICS ================= -->
+    <div id="view-analytics" class="tab-view-content hidden space-y-6">
+      
+      <div class="glass-panel p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-white">📈 Wellness Trends & Multi-Metric Analytics</h2>
+            <p class="text-xs text-berry-300/80 mt-1">Interactive trends across calories, workouts, sleep quality, and hydration.</p>
+          </div>
+
+          <!-- Range Switcher -->
+          <div class="flex items-center gap-1.5 bg-berry-900/60 p-1 rounded-xl border border-berry-700/40">
+            <button id="chart-range-7" onclick="BerryPulseCharts.setRange(7)" class="px-3 py-1 rounded-lg text-xs font-semibold bg-pink-600 text-white transition">7 Days</button>
+            <button id="chart-range-14" onclick="BerryPulseCharts.setRange(14)" class="px-3 py-1 rounded-lg text-xs font-semibold text-berry-300 hover:text-white transition">14 Days</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Chart 1: Calories Consumed vs Burned -->
+          <div class="bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-bold text-white">Calories: Intake vs Active Burn</h3>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1 text-pink-400"><span class="w-2.5 h-2.5 rounded-sm bg-pink-500"></span> Consumed</span>
+                <span class="flex items-center gap-1 text-rose-400"><span class="w-2.5 h-2.5 rounded-sm bg-rose-600"></span> Active Burn</span>
+              </div>
+            </div>
+            <div id="chart-calorie-activity-container" class="w-full pt-2"></div>
+          </div>
+
+          <!-- Chart 2: Sleep Duration Curve -->
+          <div class="bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-bold text-white">Sleep Duration & Target (8h)</h3>
+              <span class="text-xs text-purple-300">Hours per night</span>
+            </div>
+            <div id="chart-sleep-trend-container" class="w-full pt-2"></div>
+          </div>
+
+          <!-- Chart 3: Macronutrient Split Donut -->
+          <div class="bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <h3 class="text-sm font-bold text-white mb-2">Macronutrient Split (Today)</h3>
+            <div id="chart-macro-donut-container" class="w-full pt-2"></div>
+          </div>
+
+          <!-- Chart 4: Hydration Consistency -->
+          <div class="bg-berry-950/50 p-5 rounded-2xl border border-berry-800/40">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-bold text-white">Hydration Consistency</h3>
+              <span class="text-xs text-cyan-400">Daily Water (fl oz)</span>
+            </div>
+            <div id="chart-hydration-container" class="w-full pt-2"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. FOOD AI SCANNER & SEARCH MODAL -->
+  <div id="food-search-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold text-white flex items-center gap-1.5">
+              <span>✨ AI Nutrition Intelligence</span>
+            </h3>
+            <span id="modal-target-meal-name" class="text-xs uppercase px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-bold">BREAKFAST</span>
+          </div>
+          <p class="text-xs text-berry-300/70 mt-0.5">AI calculates exact calories, macros & micros from natural descriptions</p>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button onclick="document.getElementById('ai-config-modal').classList.remove('hidden'); document.getElementById('ai-config-modal').classList.add('flex');"
+            class="text-xs px-2.5 py-1 rounded-xl bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-500/30 transition flex items-center gap-1"
+            title="Configure Gemini API Key">
+            <span>⚙️ AI Engine</span>
+          </button>
+          <button onclick="BerryPulseNutrition.closeAddModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+        </div>
+      </div>
+
+      <!-- Mode Selector Tabs -->
+      <div class="flex items-center gap-2 mt-4 p-1 bg-berry-900/60 rounded-2xl border border-berry-800/60 text-xs">
+        <button id="tab-btn-ai-mode" onclick="document.getElementById('panel-ai-mode').classList.remove('hidden'); document.getElementById('panel-catalog-mode').classList.add('hidden'); this.className='flex-1 py-1.5 rounded-xl font-bold bg-pink-600 text-white shadow-md transition'; document.getElementById('tab-btn-catalog-mode').className='flex-1 py-1.5 rounded-xl font-medium text-berry-300 hover:text-white transition';"
+          class="flex-1 py-1.5 rounded-xl font-bold bg-pink-600 text-white shadow-md transition">
+          ✨ AI Nutritionist
+        </button>
+        <button id="tab-btn-catalog-mode" onclick="document.getElementById('panel-catalog-mode').classList.remove('hidden'); document.getElementById('panel-ai-mode').classList.add('hidden'); this.className='flex-1 py-1.5 rounded-xl font-bold bg-pink-600 text-white shadow-md transition'; document.getElementById('tab-btn-ai-mode').className='flex-1 py-1.5 rounded-xl font-medium text-berry-300 hover:text-white transition';"
+          class="flex-1 py-1.5 rounded-xl font-medium text-berry-300 hover:text-white transition">
+          📖 Food Catalog
+        </button>
+      </div>
+
+      <!-- TAB 1: AI NUTRITION SCANNER -->
+      <div id="panel-ai-mode" class="mt-4 space-y-3">
+        <div class="relative">
+          <div class="flex items-center gap-2">
+            <input type="text" id="ai-food-prompt-input" 
+              placeholder="e.g. 2 scrambled eggs with avocado and sourdough toast..."
+              class="flex-1 bg-berry-900/90 border border-pink-500/40 rounded-2xl px-4 py-3 text-sm text-white placeholder-berry-400/50 focus:outline-none focus:border-pink-400 shadow-inner">
+            <button id="btn-analyze-ai" onclick="BerryPulseNutrition.triggerAIAnalysis()" 
+              class="px-4 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-bold rounded-2xl shadow-lg shadow-pink-600/30 transition flex items-center gap-1.5 whitespace-nowrap">
+              <span>✨ Analyze</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick AI Presets -->
+        <div class="space-y-1.5">
+          <span class="text-[11px] text-berry-400 font-medium block">Try asking AI:</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="BerryPulseNutrition.populateAiPreset('2 scrambled eggs with avocado and sourdough toast')" class="text-[11px] px-2.5 py-1 rounded-xl bg-berry-900/70 hover:bg-berry-800 border border-berry-700/40 text-berry-200 transition">🍳 2 eggs & sourdough toast</button>
+            <button onclick="BerryPulseNutrition.populateAiPreset('Large iced oat milk matcha latte with 2 pumps vanilla')" class="text-[11px] px-2.5 py-1 rounded-xl bg-berry-900/70 hover:bg-berry-800 border border-berry-700/40 text-berry-200 transition">🍵 Iced oat milk matcha</button>
+            <button onclick="BerryPulseNutrition.populateAiPreset('Grilled wild salmon with 1 cup quinoa and steamed broccoli')" class="text-[11px] px-2.5 py-1 rounded-xl bg-berry-900/70 hover:bg-berry-800 border border-berry-700/40 text-berry-200 transition">🐟 Salmon & quinoa bowl</button>
+            <button onclick="BerryPulseNutrition.populateAiPreset('Berry acai bowl with chia seeds, banana slices, and almond butter')" class="text-[11px] px-2.5 py-1 rounded-xl bg-berry-900/70 hover:bg-berry-800 border border-berry-700/40 text-berry-200 transition">🫐 Acai superfood bowl</button>
+          </div>
+        </div>
+
+        <!-- AI Analyzing Status Indicator -->
+        <div id="ai-analyzing-status" class="hidden"></div>
+      </div>
+
+      <!-- TAB 2: TRADITIONAL FOOD CATALOG SEARCH -->
+      <div id="panel-catalog-mode" class="mt-4 hidden space-y-2">
+        <input type="text" id="food-search-input" placeholder="Search 120+ ingredients (blueberries, chicken, oats...)"
+          class="w-full bg-berry-900/90 border border-berry-700/60 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-berry-400/50 focus:outline-none focus:border-pink-500 shadow-inner">
+        <div id="food-search-results" class="flex-1 overflow-y-auto space-y-1.5 max-h-52 pr-1"></div>
+      </div>
+
+      <!-- Selected Item Preview & Nutrients Breakdown (Common for both AI and Catalog) -->
+      <div id="food-preview-details" class="hidden mt-4 p-4 rounded-2xl bg-berry-900/70 border border-pink-500/30 overflow-y-auto max-h-64">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span id="preview-food-icon" class="text-2xl p-1.5 bg-berry-800/80 rounded-xl">🫐</span>
+            <div>
+              <h4 id="preview-food-name" class="font-bold text-white text-sm">Item Name</h4>
+              <p id="preview-food-serving" class="text-xs text-berry-300/80">1 serving</p>
+            </div>
+          </div>
+          <span id="preview-food-cals" class="text-xl font-extrabold text-pink-400">150 kcal</span>
+        </div>
+
+        <!-- AI Insights & Ingredients Card -->
+        <div id="preview-ai-details" class="mt-2.5 hidden"></div>
+
+        <!-- Serving Multiplier Control -->
+        <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-berry-800/40 text-xs">
+          <label class="text-berry-300 font-medium">Serving Multiplier:</label>
+          <div class="flex items-center gap-2">
+            <input type="number" id="food-serving-multiplier" step="0.25" min="0.25" max="10" value="1.0"
+              class="w-16 bg-berry-950 border border-berry-700 rounded-lg px-2 py-1 text-center text-white focus:outline-none focus:border-pink-500 text-xs font-bold">
+            <span class="text-berry-400 font-bold">×</span>
+          </div>
+        </div>
+
+        <!-- Macro Breakdown -->
+        <div class="grid grid-cols-4 gap-2 text-center mt-3 pt-2.5 border-t border-berry-800/40 text-[11px]">
+          <div><span class="text-rose-400 font-bold block text-xs" id="preview-macro-protein">0g</span><span class="text-berry-400">Protein</span></div>
+          <div><span class="text-amber-400 font-bold block text-xs" id="preview-macro-carbs">0g</span><span class="text-berry-400">Carbs</span></div>
+          <div><span class="text-cyan-400 font-bold block text-xs" id="preview-macro-fat">0g</span><span class="text-berry-400">Fat</span></div>
+          <div><span class="text-emerald-400 font-bold block text-xs" id="preview-macro-fiber">0g</span><span class="text-berry-400">Fiber</span></div>
+        </div>
+
+        <button onclick="BerryPulseNutrition.confirmAddFood()" class="w-full mt-3.5 py-2.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-pink-600/30 transition">
+          + Add to Meal
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AI ENGINE CONFIGURATION MODAL -->
+  <div id="ai-config-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md bg-berry-950 border border-purple-500/40 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>✨ AI Engine Settings</span>
+        </h3>
+        <button onclick="document.getElementById('ai-config-modal').classList.add('hidden'); document.getElementById('ai-config-modal').classList.remove('flex');" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <!-- Active Engines Info -->
+        <div class="p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-xs space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white">Active Intelligence Engine:</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold text-[10px]">Dual-Engine Ready</span>
+          </div>
+          <p class="text-berry-200/80 leading-relaxed">
+            BerryPulse uses a <b>Built-in Smart Neural AI Engine</b> right in your browser for instant offline calculations. You can also provide a <b>Google Gemini API Key</b> to unlock unlimited real-time cloud AI analysis!
+          </p>
+        </div>
+
+        <!-- Optional Gemini API Key Input -->
+        <div>
+          <label class="text-xs text-berry-200 font-semibold block mb-1">Optional Google Gemini API Key</label>
+          <input type="password" id="input-gemini-api-key" placeholder="AIzaSy..." 
+            class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white placeholder-berry-400/40 focus:outline-none focus:border-pink-500 font-mono">
+          <p class="text-[11px] text-berry-400 mt-1">Saved securely in your browser's private localStorage. Leave empty to use the zero-setup Built-in Neural AI engine.</p>
+        </div>
+      </div>
+
+      <div class="mt-5 flex items-center gap-2">
+        <button onclick="BerryPulseAI.setApiKey(document.getElementById('input-gemini-api-key').value); document.getElementById('ai-config-modal').classList.add('hidden'); document.getElementById('ai-config-modal').classList.remove('flex'); BerryPulseApp.showToast('✨ AI Settings updated!');"
+          class="flex-1 py-2.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-bold shadow-md transition">
+          Save Settings
+        </button>
+        <button onclick="document.getElementById('ai-config-modal').classList.add('hidden'); document.getElementById('ai-config-modal').classList.remove('flex');"
+          class="px-4 py-2.5 bg-berry-800 hover:bg-berry-700 text-berry-300 rounded-xl text-xs font-semibold transition">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. CUSTOM FOOD MODAL -->
+  <div id="custom-food-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white">➕ Add Custom Food Item</h3>
+        <button onclick="BerryPulseNutrition.closeCustomFoodModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Food Name *</label>
+          <input type="text" id="custom-food-name" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="e.g. Homemade Berry Cobbler">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Calories (kcal) *</label>
+            <input type="number" id="custom-food-cals" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="250">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Serving Size</label>
+            <input type="text" id="custom-food-serving" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="1 slice (120g)">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Protein (g)</label>
+            <input type="number" step="0.1" id="custom-food-protein" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="6">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Carbs (g)</label>
+            <input type="number" step="0.1" id="custom-food-carbs" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="32">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Fat (g)</label>
+            <input type="number" step="0.1" id="custom-food-fat" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="8">
+          </div>
+        </div>
+      </div>
+
+      <button onclick="BerryPulseNutrition.saveCustomFood()" class="w-full mt-5 py-2.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
+        Save & Add
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. CUSTOM HABIT MODAL -->
+  <div id="new-habit-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white">🌟 Create Customizable Habit</h3>
+        <button onclick="BerryPulseHabits.closeAddModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Habit Name *</label>
+          <input type="text" id="new-habit-name" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="e.g. 10 Min Morning Stretches">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Category</label>
+            <select id="new-habit-category" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+              <option value="Body">Body</option>
+              <option value="Mind">Mind</option>
+              <option value="Movement">Movement</option>
+              <option value="Nutrition">Nutrition</option>
+              <option value="Sleep">Sleep</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Emoji / Icon</label>
+            <input type="text" id="new-habit-icon" value="🌟" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Frequency</label>
+          <select id="new-habit-frequency" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+            <option value="Daily">Daily</option>
+            <option value="Weekdays">Weekdays</option>
+            <option value="3x/Week">3x per Week</option>
+          </select>
+        </div>
+      </div>
+
+      <button onclick="BerryPulseHabits.saveNewHabit()" class="w-full mt-5 py-2.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
+        Create Habit
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. WORKOUT LOGGER MODAL -->
+  <div id="workout-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white">🏃 Log Physical Activity</h3>
+        <button onclick="BerryPulseActivity.closeWorkoutModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Activity Type *</label>
+          <select id="workout-type-select" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Duration (Mins) *</label>
+            <input type="number" id="workout-duration-input" value="30" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Calories Burned (kcal)</label>
+            <input type="number" id="workout-calories-input" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Distance (km)</label>
+            <input type="number" step="0.1" id="workout-distance-input" placeholder="Optional" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Intensity</label>
+            <select id="workout-intensity-select" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+              <option value="Light">Light</option>
+              <option value="Moderate" selected>Moderate</option>
+              <option value="High">High</option>
+              <option value="Peak">Peak</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Notes</label>
+          <input type="text" id="workout-notes-input" placeholder="Morning trail run, great pacing..." class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+        </div>
+      </div>
+
+      <button onclick="BerryPulseActivity.saveWorkout()" class="w-full mt-5 py-2.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
+        Log Workout
+      </button>
+    </div>
+  </div>
+
+  <!-- 5. APPLE WATCH SYNC MODAL -->
+  <div id="apple-watch-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">⌚</span>
+          <h3 class="text-base font-bold text-white">Apple Watch & HealthKit Hub</h3>
+        </div>
+        <button onclick="BerryPulseAppleWatch.closeSyncModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <!-- Live Watch State -->
+      <div class="mt-5 p-4 rounded-2xl bg-berry-900/60 border border-berry-700/50 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-black border border-slate-700 flex items-center justify-center text-xl">
+            ⌚
+          </div>
+          <div>
+            <h4 class="font-bold text-white text-sm">Apple Watch Ultra 2</h4>
+            <p class="text-xs text-emerald-400 font-semibold">● Connected • HealthKit Active</p>
+          </div>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">84% Battery</span>
+      </div>
+
+      <!-- Sync Progress -->
+      <div class="mt-4 space-y-2">
+        <div class="flex justify-between text-xs">
+          <span id="watch-sync-progress-text" class="text-berry-300">Ready to synchronize activity rings</span>
+        </div>
+        <div class="w-full bg-berry-950 h-2 rounded-full overflow-hidden">
+          <div id="watch-sync-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-600 transition-all duration-300" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Action: Trigger Live Sync -->
+      <div class="mt-5 space-y-3">
+        <button id="btn-sync-watch-now" onclick="BerryPulseAppleWatch.triggerLiveSync()" class="w-full py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-pink-600/30 transition flex items-center justify-center gap-2">
+          <span>🔄 Sync Apple Watch Activity Rings Now</span>
+        </button>
+
+        <!-- Action: Import Apple Health Export XML / JSON -->
+        <div class="p-3.5 rounded-2xl bg-berry-900/40 border border-berry-800/60 text-center">
+          <p class="text-xs text-berry-200 font-medium">Or import official Apple Health export file (export.xml or JSON):</p>
+          <label class="mt-2 inline-block px-4 py-1.5 rounded-xl bg-berry-800 hover:bg-berry-700 text-pink-300 text-xs font-semibold cursor-pointer border border-berry-700/60 transition">
+            📂 Choose Apple Health File
+            <input type="file" accept=".xml,.json" onchange="BerryPulseAppleWatch.handleHealthFileImport(event)" class="hidden">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. GUIDED BREATHING VISUALIZER MODAL -->
+  <div id="breathing-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg bg-berry-950 border border-purple-500/30 p-6 rounded-3xl shadow-2xl relative text-center">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white">🧘 Guided Mindful Breathwork</h3>
+        <button onclick="BerryPulseMindfulness.closeBreathingModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <!-- Technique Selector -->
+      <div class="flex items-center justify-center gap-2 mt-4">
+        <button id="btn-technique-box" onclick="BerryPulseMindfulness.setBreathingTechnique('box')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-pink-600 text-white transition">
+          Box Breathing (4-4-4-4)
+        </button>
+        <button id="btn-technique-relax" onclick="BerryPulseMindfulness.setBreathingTechnique('relax')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-berry-300 hover:text-white transition">
+          4-7-8 Relaxing Breath
+        </button>
+      </div>
+
+      <!-- Breathing Orb Visualizer -->
+      <div class="py-12 flex items-center justify-center">
+        <div id="breathing-orb" class="w-44 h-44 rounded-full bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-500 shadow-2xl shadow-purple-500/50 flex items-center justify-center transition-all duration-700 ease-in-out scale-100">
+          <div class="text-center text-white px-2">
+            <span id="breathing-phase-label" class="text-lg font-extrabold block">Breathe</span>
+            <span id="breathing-timer-label" class="text-xs text-purple-200/80 block mt-0.5">00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <p id="breathing-instruction-label" class="text-sm font-medium text-berry-200 mb-6">Press start to begin your soothing session</p>
+
+      <div class="flex items-center justify-center gap-3">
+        <button id="btn-breathing-toggle" onclick="BerryPulseMindfulness.toggleBreathingSession()" class="px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
+          Start Guided Session
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. SETTINGS & GOALS MODAL -->
+  <div id="settings-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white">⚙️ Personal Wellness Goals</h3>
+        <button onclick="BerryPulseApp.closeSettingsModal()" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <!-- AI Advisor Banner -->
+      <div class="mt-3 p-3 rounded-2xl bg-gradient-to-r from-purple-900/50 via-pink-900/40 to-purple-900/50 border border-pink-500/30 flex items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-1.5 text-xs font-bold text-white">
+            <span>✨</span> Need Guidance?
+          </div>
+          <p class="text-[11px] text-pink-200/80 mt-0.5">Let AI calculate targets for calories, protein, hydration & sleep</p>
+        </div>
+        <button type="button" onclick="BerryPulseApp.closeSettingsModal(); BerryPulseAIAdvisor.openModal();" class="px-2.5 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold whitespace-nowrap shadow transition">
+          ✨ Open AI
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Calorie Target (kcal)</label>
+            <input type="number" id="goal-calories-input" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Protein Target (grams)</label>
+            <input type="number" id="goal-protein-input" placeholder="140" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Active Calories Burn Goal (Move Ring)</label>
+          <input type="number" id="goal-active-cal-input" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-xs text-berry-300 block mb-1">Daily Water Goal (fl oz)</label>
+          <input type="number" id="goal-water-input" placeholder="96" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Sleep Target (Hours)</label>
+            <input type="number" step="0.5" id="goal-sleep-input" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+          <div>
+            <label class="text-xs text-berry-300 block mb-1">Mindfulness Target (Mins)</label>
+            <input type="number" id="goal-mindfulness-input" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+        </div>
+      </div>
+
+      <button onclick="BerryPulseApp.saveSettings()" class="w-full mt-5 py-2.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg transition">
+        Save Wellness Targets
+      </button>
+    </div>
+  </div>
+
+  <!-- 8. BACKUP & STORAGE MODAL -->
+  <div id="data-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-berry-800/50">
+        <h3 class="text-base font-bold text-white">💾 Local Storage & Data Backup</h3>
+        <button onclick="document.getElementById('data-modal').classList.add('hidden'); document.getElementById('data-modal').classList.remove('flex');" class="text-berry-400 hover:text-white p-1 text-xl">✕</button>
+      </div>
+
+      <p class="text-xs text-berry-300/80 mt-3">All your data is saved automatically in your browser's private local storage.</p>
+
+      <div class="mt-4 space-y-2.5">
+        <button onclick="BerryPulseStorage.exportData()" class="w-full py-2.5 bg-berry-800 hover:bg-berry-700 text-pink-300 text-xs font-semibold rounded-xl border border-berry-700/60 transition flex items-center justify-center gap-2">
+          <span>📥 Export Backup (JSON File)</span>
+        </button>
+
+        <label class="w-full py-2.5 bg-berry-800 hover:bg-berry-700 text-berry-200 text-xs font-semibold rounded-xl border border-berry-700/60 transition flex items-center justify-center gap-2 cursor-pointer">
+          <span>📤 Import Backup (JSON File)</span>
+          <input type="file" accept=".json" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = e => BerryPulseStorage.importData(e.target.result); r.readAsText(f); }" class="hidden">
+        </label>
+
+        <button onclick="if(confirm('Reload sample wellness demo data? This will restore 7 full days of mock history.')) BerryPulseStorage.resetToSampleData();" class="w-full py-2 bg-berry-900/60 hover:bg-berry-800 text-berry-400 text-xs font-medium rounded-xl border border-berry-800/40 transition">
+          🔄 Restore 7-Day Demo Data
+        </button>
+
+        <button onclick="if(confirm('WARNING: Clear all data and reset to fresh empty tracker?')) BerryPulseStorage.clearAllData();" class="w-full py-2 bg-rose-950/30 hover:bg-rose-900/60 text-rose-400 text-xs font-medium rounded-xl border border-rose-900/40 transition">
+          ⚠️ Wipe All Data (Fresh Start)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. AI HEALTH & TARGET ADVISOR MODAL -->
+  <div id="ai-advisor-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="glass-panel w-full max-w-2xl bg-berry-950 border border-pink-500/40 p-6 md:p-7 rounded-3xl shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Header -->
+      <div class="flex items-start justify-between pb-4 border-b border-berry-800/50">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl">✨</span>
+            <h3 class="text-lg font-extrabold text-white">AI Health & Targets Advisor</h3>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-bold uppercase tracking-wider">Clinical AI</span>
+          </div>
+          <p class="text-xs text-berry-300/80 mt-1">Personalized science-backed targets for calories, protein, macros, water, sleep & exercise tailored to your body.</p>
+        </div>
+        <button onclick="BerryPulseAIAdvisor.closeModal()" class="text-berry-400 hover:text-white p-1 text-xl leading-none">✕</button>
+      </div>
+
+      <!-- Form Inputs: Age, Sex, Weight, Height, Goal, Activity Level -->
+      <div class="mt-5 space-y-4">
+        
+        <!-- Row 1: Age & Biological Sex -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold text-berry-200 block mb-1.5">Age (Years)</label>
+            <input type="number" id="ai-input-age" value="28" min="15" max="100" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-berry-200 block mb-1.5">Biological Sex (for BMR Formula)</label>
+            <div class="flex gap-2">
+              <button type="button" id="ai-gender-female-btn" onclick="BerryPulseAIAdvisor.setGender('female'); BerryPulseAIAdvisor.generateRecommendations();" class="flex-1 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-md transition border border-pink-500/50">
+                👩 Female
+              </button>
+              <button type="button" id="ai-gender-male-btn" onclick="BerryPulseAIAdvisor.setGender('male'); BerryPulseAIAdvisor.generateRecommendations();" class="flex-1 py-2 rounded-xl text-xs font-semibold bg-berry-900/60 text-berry-300 hover:text-white transition border border-berry-700/40">
+                👨 Male
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Weight & Height with Unit Toggles -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Weight -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-berry-200">Weight</label>
+              <div class="flex items-center gap-1 bg-berry-900/80 p-0.5 rounded-lg border border-berry-800/60">
+                <button type="button" id="ai-weight-unit-lbs" onclick="BerryPulseAIAdvisor.setWeightUnit('lbs'); BerryPulseAIAdvisor.generateRecommendations();" class="px-2 py-0.5 text-xs font-bold rounded-md bg-pink-600 text-white transition">lbs</button>
+                <button type="button" id="ai-weight-unit-kg" onclick="BerryPulseAIAdvisor.setWeightUnit('kg'); BerryPulseAIAdvisor.generateRecommendations();" class="px-2 py-0.5 text-xs font-medium rounded-md text-berry-300 hover:text-white transition">kg</button>
+              </div>
+            </div>
+            <div class="relative">
+              <input type="number" id="ai-input-weight" value="155" step="0.5" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+              <span id="ai-weight-unit-label" class="absolute right-3.5 top-2.5 text-xs text-berry-400 font-semibold pointer-events-none">lbs</span>
+            </div>
+          </div>
+
+          <!-- Height -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-berry-200">Height</label>
+              <div class="flex items-center gap-1 bg-berry-900/80 p-0.5 rounded-lg border border-berry-800/60">
+                <button type="button" id="ai-height-unit-ft" onclick="BerryPulseAIAdvisor.setHeightUnit('ft'); BerryPulseAIAdvisor.generateRecommendations();" class="px-2 py-0.5 text-xs font-bold rounded-md bg-pink-600 text-white transition">ft / in</button>
+                <button type="button" id="ai-height-unit-cm" onclick="BerryPulseAIAdvisor.setHeightUnit('cm'); BerryPulseAIAdvisor.generateRecommendations();" class="px-2 py-0.5 text-xs font-medium rounded-md text-berry-300 hover:text-white transition">cm</button>
+              </div>
+            </div>
+
+            <!-- Feet & Inches panel -->
+            <div id="ai-height-ft-panel" class="grid grid-cols-2 gap-2">
+              <div class="relative">
+                <input type="number" id="ai-input-height-ft" value="5" min="3" max="7" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+                <span class="absolute right-3 top-2.5 text-xs text-berry-400 font-medium pointer-events-none">ft</span>
+              </div>
+              <div class="relative">
+                <input type="number" id="ai-input-height-in" value="7" min="0" max="11" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+                <span class="absolute right-3 top-2.5 text-xs text-berry-400 font-medium pointer-events-none">in</span>
+              </div>
+            </div>
+
+            <!-- Centimeters panel -->
+            <div id="ai-height-cm-panel" class="hidden relative">
+              <input type="number" id="ai-input-height-cm" value="170" min="100" max="230" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+              <span class="absolute right-3.5 top-2.5 text-xs text-berry-400 font-medium pointer-events-none">cm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Goal & Activity Level -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Primary Goal -->
+          <div>
+            <label class="text-xs font-semibold text-berry-200 block mb-1.5">Primary Body & Weight Goal</label>
+            <select id="ai-select-goal" onchange="BerryPulseAIAdvisor.generateRecommendations();" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:outline-none focus:border-pink-500">
+              <option value="lose_weight" selected>📉 Lose Weight (Sustainable ~1 lb/week fat loss)</option>
+              <option value="lose_weight_fast">⚡ Rapid Fat Loss (Aggressive 700 kcal deficit)</option>
+              <option value="maintain">⚖️ Maintain Weight & Body Recomposition</option>
+              <option value="build_muscle">💪 Build Muscle & Lean Bulk (+300 kcal surplus)</option>
+            </select>
+          </div>
+
+          <!-- Activity Level -->
+          <div>
+            <label class="text-xs font-semibold text-berry-200 block mb-1.5">Daily Movement & Workout Frequency</label>
+            <select id="ai-select-activity" onchange="BerryPulseAIAdvisor.generateRecommendations();" class="w-full bg-berry-900 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:outline-none focus:border-pink-500">
+              <option value="sedentary">🛋️ Sedentary (Desk job, minimal activity)</option>
+              <option value="light">🚶 Lightly Active (Light exercise 1-3 days/week)</option>
+              <option value="moderate" selected>🏃 Moderately Active (Moderate workouts 3-5 days/week)</option>
+              <option value="very_active">⚡ Very Active (Intense training 6-7 days/week)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Recalculate button -->
+        <div class="flex items-center justify-between pt-1">
+          <span id="rec-tdee-info" class="text-[11px] text-berry-300/80">Calculating metabolic baseline...</span>
+          <button type="button" onclick="BerryPulseAIAdvisor.generateRecommendations()" class="px-3.5 py-1.5 rounded-xl bg-berry-800 hover:bg-berry-700 text-pink-300 text-xs font-semibold border border-berry-700/60 transition flex items-center gap-1.5">
+            <span>🔄 Recalculate Targets</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- RESULTS SECTION -->
+      <div id="ai-advisor-results" class="mt-6 pt-5 border-t border-berry-800/60 space-y-5">
+        
+        <!-- Summary Header & Goal Pill -->
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-berry-400">Personalized Targets</span>
+            <h4 class="text-base font-extrabold text-white mt-0.5">Recommended Daily Targets</h4>
+          </div>
+          <span id="rec-goal-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">
+            📉 Fat Loss
+          </span>
+        </div>
+
+        <!-- Target Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+          
+          <!-- Calories Card -->
+          <div class="p-3.5 rounded-2xl bg-berry-900/60 border border-pink-500/30 relative overflow-hidden">
+            <span class="text-[11px] text-berry-300 font-medium block">Daily Calories</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="rec-calories-val" class="text-2xl font-black text-white">1,850</span>
+              <span class="text-xs text-pink-400 font-bold">kcal</span>
+            </div>
+            <span class="text-[10px] text-pink-300/80 block mt-1">Target energy budget</span>
+          </div>
+
+          <!-- Protein Card -->
+          <div class="p-3.5 rounded-2xl bg-berry-900/60 border border-rose-500/30 relative overflow-hidden">
+            <span class="text-[11px] text-berry-300 font-medium block">Daily Protein</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="rec-protein-val" class="text-2xl font-black text-rose-400">155g</span>
+              <span class="text-xs text-rose-300 font-bold">goal</span>
+            </div>
+            <span class="text-[10px] text-rose-300/80 block mt-1">Sparing lean muscle</span>
+          </div>
+
+          <!-- Water Intake Card (fl oz) -->
+          <div class="p-3.5 rounded-2xl bg-berry-900/60 border border-sky-500/30 relative overflow-hidden">
+            <span class="text-[11px] text-berry-300 font-medium block">Hydration Target</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="rec-water-val" class="text-2xl font-black text-sky-400">104 oz</span>
+              <span class="text-xs text-sky-300 font-bold">fluid oz</span>
+            </div>
+            <span class="text-[10px] text-sky-300/80 block mt-1">~6.5 water bottles</span>
+          </div>
+
+          <!-- Sleep Card -->
+          <div class="p-3.5 rounded-2xl bg-berry-900/60 border border-purple-500/30 relative overflow-hidden">
+            <span class="text-[11px] text-berry-300 font-medium block">Sleep Target</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="rec-sleep-val" class="text-2xl font-black text-purple-400">8.5 hrs</span>
+            </div>
+            <span class="text-[10px] text-purple-300/80 block mt-1">Recovery & hormones</span>
+          </div>
+
+          <!-- Active Burn (Move Ring) Card -->
+          <div class="p-3.5 rounded-2xl bg-berry-900/60 border border-amber-500/30 relative overflow-hidden">
+            <span class="text-[11px] text-berry-300 font-medium block">Move Ring Burn</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="rec-move-val" class="text-2xl font-black text-amber-400">670 kcal</span>
+            </div>
+            <span class="text-[10px] text-amber-300/80 block mt-1">Active calorie expenditure</span>
+          </div>
+
+          <!-- Exercise & Steps Card -->
+          <div class="p-3.5 rounded-2xl bg-berry-900/60 border border-emerald-500/30 relative overflow-hidden">
+            <span class="text-[11px] text-berry-300 font-medium block">Exercise & Steps</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="rec-exercise-val" class="text-xl font-black text-emerald-400">45 min</span>
+              <span class="text-xs text-emerald-300/80">/</span>
+              <span id="rec-steps-val" class="text-xs font-bold text-white">11,000 steps</span>
+            </div>
+            <span class="text-[10px] text-emerald-300/80 block mt-1">Cardio & resistance training</span>
+          </div>
+
+        </div>
+
+        <!-- Macro Breakdown Bar -->
+        <div class="bg-berry-900/40 p-4 rounded-2xl border border-berry-800/60">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="font-bold text-white">Macronutrient Distribution Split</span>
+            <div class="flex items-center gap-3 text-[11px]">
+              <span class="text-rose-400 font-medium">Protein: <b id="rec-macro-label-protein">30%</b></span>
+              <span class="text-amber-400 font-medium">Carbs: <b id="rec-macro-label-carbs">43%</b></span>
+              <span class="text-cyan-400 font-medium">Fat: <b id="rec-macro-label-fat">27%</b></span>
+            </div>
+          </div>
+          <div class="w-full bg-berry-950 h-3 rounded-full flex overflow-hidden border border-berry-800/40">
+            <div id="rec-macro-bar-protein" class="bg-rose-500 h-full transition-all" style="width: 30%;"></div>
+            <div id="rec-macro-bar-carbs" class="bg-amber-500 h-full transition-all" style="width: 43%;"></div>
+            <div id="rec-macro-bar-fat" class="bg-cyan-500 h-full transition-all" style="width: 27%;"></div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-berry-300/80 mt-2.5">
+            <span>Carbs: <strong id="rec-carbs-val" class="text-amber-300">195g</strong></span>
+            <span>Healthy Fats: <strong id="rec-fat-val" class="text-cyan-300">55g</strong></span>
+            <span>Dietary Fiber: <strong id="rec-fiber-val" class="text-emerald-300">26g</strong></span>
+          </div>
+        </div>
+
+        <!-- AI Coach Insights -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>🧠</span> Science-Backed AI Coach Insights
+            </span>
+            <span id="ai-gemini-live-badge" class="text-[11px] text-berry-400 font-medium flex items-center gap-1.5">
+              ⚡ Powered by Built-In Clinical Intelligence Engine
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div class="p-3.5 rounded-2xl bg-berry-900/40 border border-berry-800/40">
+              <span class="font-bold text-rose-300 flex items-center gap-1 mb-1">🥗 Calorie & Protein Protocol</span>
+              <p id="ai-insight-nutrition" class="text-berry-200/90 leading-relaxed"></p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-berry-900/40 border border-berry-800/40">
+              <span class="font-bold text-sky-300 flex items-center gap-1 mb-1">💧 Hydration Strategy</span>
+              <p id="ai-insight-water" class="text-berry-200/90 leading-relaxed"></p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-berry-900/40 border border-berry-800/40">
+              <span class="font-bold text-purple-300 flex items-center gap-1 mb-1">🌙 Sleep & Hormonal Recovery</span>
+              <p id="ai-insight-sleep" class="text-berry-200/90 leading-relaxed"></p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-berry-900/40 border border-berry-800/40">
+              <span class="font-bold text-emerald-300 flex items-center gap-1 mb-1">🏃 Movement & Workouts</span>
+              <p id="ai-insight-workout" class="text-berry-200/90 leading-relaxed"></p>
+            </div>
+          </div>
+
+          <!-- Extra container for Gemini live commentary -->
+          <div id="ai-gemini-extra-insights" class="hidden"></div>
+        </div>
+
+        <!-- Apply CTA Button -->
+        <div class="pt-3">
+          <button type="button" onclick="BerryPulseAIAdvisor.applyRecommendationsToGoals()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 hover:from-pink-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-xl shadow-pink-600/30 transition flex items-center justify-center gap-2">
+            <span>🎯 Apply Recommendations to Dashboard Targets</span>
+          </button>
+          <p class="text-[11px] text-center text-berry-300/70 mt-2">Instantly updates your calorie budget, protein, water, sleep, and Apple Move goals across all tabs.</p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ai-nutrition.js"></script>
+  <script src="js/ai-advisor.js"></script>
+  <script src="js/nutrition.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/activity.js"></script>
+  <script src="js/apple-watch.js"></script>
+  <script src="js/water.js"></script>
+  <script src="js/sleep.js"></script>
+  <script src="js/mindfulness.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

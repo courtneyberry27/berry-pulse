@@ -1,0 +1,160 @@
+/*
+ * BerryPulse Wellness Tracker - Design System & Custom Styles
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-deep: #0a0512;
+  --bg-card: rgba(23, 13, 38, 0.75);
+  --bg-card-hover: rgba(33, 18, 56, 0.85);
+  --border-subtle: rgba(244, 63, 94, 0.15);
+  --berry-primary: #f43f5e;
+  --berry-primary-glow: rgba(244, 63, 94, 0.4);
+  --berry-purple: #9333ea;
+  --berry-cyan: #06b6d4;
+  --berry-emerald: #10b981;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(244, 63, 94, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(147, 51, 234, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, .brand-font {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Glassmorphism Card Utilities */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(244, 63, 94, 0.3);
+  box-shadow: 0 12px 30px -10px rgba(244, 63, 94, 0.15);
+}
+
+/* Tab Navigation Active & Inactive States */
+.tab-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border-width: 1px;
+}
+
+.tab-btn.tab-active {
+  background: rgba(244, 63, 94, 0.25) !important;
+  color: #fb7185 !important;
+  border-color: rgba(244, 63, 94, 0.6) !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.25) !important;
+  font-weight: 700 !important;
+}
+
+.tab-btn.tab-inactive {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+.tab-btn.tab-inactive:hover {
+  background: rgba(35, 15, 44, 0.6) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+/* Interactive Water Glass Container & Liquid */
+.water-bottle-container {
+  position: relative;
+  width: 90px;
+  height: 160px;
+  border: 3px solid rgba(56, 189, 248, 0.45);
+  border-top: 2px solid rgba(186, 230, 253, 0.7);
+  border-radius: 10px 10px 22px 22px;
+  overflow: hidden;
+  background: rgba(14, 165, 233, 0.05);
+  box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.15), 0 8px 20px -5px rgba(6, 182, 212, 0.25);
+}
+
+.water-bottle-cap {
+  display: none !important;
+}
+
+.water-liquid-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 70%, #0369a1 100%);
+  transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 -2px 10px rgba(56, 189, 248, 0.4);
+  border-top: 2px solid rgba(224, 242, 254, 0.85);
+}
+
+/* Pulsing Heart / Berry Glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.6));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.9));
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.8s ease-in-out infinite;
+}
+
+/* Modal Transitions */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(10, 5, 18, 0.82);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(20, 10, 35, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(244, 63, 94, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 63, 94, 0.6);
+}
+
+/* Input Styles */
+input, select, textarea {
+  color-scheme: dark;
+}
+
+/* Smooth Ring Progress Animation */
+circle {
+  transition: stroke-dashoffset 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
