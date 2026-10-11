@@ -123,28 +123,28 @@
 
     <!-- Navigation Tabs Pill Bar -->
     <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-berry-800/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-      <button data-tab-target="overview" class="tab-btn tab-active px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('overview')" data-tab-target="overview" class="tab-btn tab-active px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         📊 Overview
       </button>
-      <button data-tab-target="nutrition" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('nutrition')" data-tab-target="nutrition" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         🥗 Nutrition & Calories
       </button>
-      <button data-tab-target="activity" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('activity')" data-tab-target="activity" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         🏃 Activity & Apple Watch
       </button>
-      <button data-tab-target="habits" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('habits')" data-tab-target="habits" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         ✅ Habits Tracker
       </button>
-      <button data-tab-target="water" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('water')" data-tab-target="water" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         💧 Hydration
       </button>
-      <button data-tab-target="sleep" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('sleep')" data-tab-target="sleep" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         🌙 Sleep
       </button>
-      <button data-tab-target="mindfulness" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('mindfulness')" data-tab-target="mindfulness" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         🧘 Mindfulness
       </button>
-      <button data-tab-target="analytics" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
+      <button onclick="BerryPulseApp.switchTab('analytics')" data-tab-target="analytics" class="tab-btn tab-inactive px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">
         📈 Interactive Charts
       </button>
     </div>
@@ -278,7 +278,10 @@
         <div class="glass-panel p-5 flex flex-col justify-between">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">Water Intake</span>
-            <span id="overview-water-pct-val" class="text-xs font-bold text-cyan-400">71%</span>
+            <div class="flex items-center gap-2">
+              <span id="overview-water-pct-val" class="text-xs font-bold text-cyan-400">71%</span>
+              <button onclick="BerryPulseApp.switchTab('water')" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold">Log →</button>
+            </div>
           </div>
 
           <div class="flex items-center justify-around py-3">
@@ -306,7 +309,10 @@
         <div class="glass-panel p-5 flex flex-col justify-between">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">Sleep & Rest</span>
-            <span id="overview-sleep-quality-text" class="text-xs text-purple-400 font-semibold">Deep 😴</span>
+            <div class="flex items-center gap-2">
+              <span id="overview-sleep-quality-text" class="text-xs text-purple-400 font-semibold">Deep 😴</span>
+              <button onclick="BerryPulseApp.switchTab('sleep')" class="text-[11px] text-purple-400 hover:text-purple-300 font-semibold">Log →</button>
+            </div>
           </div>
 
           <div class="my-auto py-2">

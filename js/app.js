@@ -6,36 +6,64 @@ const BerryPulseApp = {
   currentTab: 'overview',
 
   init: function() {
-    // 1. Initialize Storage first
-    BerryPulseStorage.init();
+    window.BerryPulseApp = this;
 
-    // 2. Initialize Sub-modules
-    if (typeof BerryPulseAI !== 'undefined') BerryPulseAI.init();
-    BerryPulseNutrition.init();
-    BerryPulseHabits.init();
-    BerryPulseActivity.init();
-    BerryPulseAppleWatch.init();
-    BerryPulseWater.init();
-    BerryPulseSleep.init();
-    BerryPulseMindfulness.init();
-    BerryPulseCharts.init();
-    if (window.BerryPulseAIAdvisor) BerryPulseAIAdvisor.init();
+    // 1. Bind Global Application Events FIRST so navigation & buttons always work
+    try {
+      this.bindGlobalEvents();
+    } catch (e) {
+      console.error('BerryPulseApp: Failed to bind global events:', e);
+    }
 
-    // 3. Bind Global Application Events
-    this.bindGlobalEvents();
-    this.updateHeaderDateDisplay();
-    this.setupConfettiCanvas();
+    // 2. Initialize Storage
+    try {
+      if (window.BerryPulseStorage && BerryPulseStorage.init) {
+        BerryPulseStorage.init();
+      }
+    } catch (e) {
+      console.error('BerryPulseApp: Failed to initialize storage:', e);
+    }
+
+    // 3. Initialize Sub-modules with isolated try/catch blocks
+    const modules = [
+      ['AI Nutrition', () => window.BerryPulseAI && BerryPulseAI.init && BerryPulseAI.init()],
+      ['Nutrition', () => window.BerryPulseNutrition && BerryPulseNutrition.init && BerryPulseNutrition.init()],
+      ['Habits', () => window.BerryPulseHabits && BerryPulseHabits.init && BerryPulseHabits.init()],
+      ['Activity', () => window.BerryPulseActivity && BerryPulseActivity.init && BerryPulseActivity.init()],
+      ['Apple Watch', () => window.BerryPulseAppleWatch && BerryPulseAppleWatch.init && BerryPulseAppleWatch.init()],
+      ['Water', () => window.BerryPulseWater && BerryPulseWater.init && BerryPulseWater.init()],
+      ['Sleep', () => window.BerryPulseSleep && BerryPulseSleep.init && BerryPulseSleep.init()],
+      ['Mindfulness', () => window.BerryPulseMindfulness && BerryPulseMindfulness.init && BerryPulseMindfulness.init()],
+      ['Charts', () => window.BerryPulseCharts && BerryPulseCharts.init && BerryPulseCharts.init()],
+      ['AI Advisor', () => window.BerryPulseAIAdvisor && BerryPulseAIAdvisor.init && BerryPulseAIAdvisor.init()]
+    ];
+
+    modules.forEach(([name, initFn]) => {
+      try {
+        initFn();
+      } catch (err) {
+        console.error(`BerryPulseApp: Error initializing ${name} module:`, err);
+      }
+    });
+
+    // 4. Update header displays and effects
+    try {
+      this.updateHeaderDateDisplay();
+      this.setupConfettiCanvas();
+    } catch (e) {
+      console.warn('BerryPulseApp: Post-init warning:', e);
+    }
 
     console.log('🍇 BerryPulse initialized successfully!');
   },
 
   bindGlobalEvents: function() {
-    // Tab switching
+    // Tab switching (both direct button listeners and document delegation)
     const tabButtons = document.querySelectorAll('[data-tab-target]');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         const target = btn.dataset.tabTarget;
-        this.switchTab(target);
+        if (target) this.switchTab(target);
       });
     });
 
@@ -53,7 +81,7 @@ const BerryPulseApp = {
     }
     if (btnToday) {
       btnToday.addEventListener('click', () => {
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = (BerryPulseStorage.getTodayString && BerryPulseStorage.getTodayString()) || new Date().toISOString().split('T')[0];
         BerryPulseStorage.setActiveDate(todayStr);
         this.updateHeaderDateDisplay();
       });
@@ -80,6 +108,7 @@ const BerryPulseApp = {
   },
 
   switchTab: function(tabId) {
+    if (!tabId) return;
     this.currentTab = tabId;
 
     // Update nav button states using dedicated tab-active / tab-inactive classes
@@ -103,26 +132,32 @@ const BerryPulseApp = {
       }
     });
 
-    // Re-render corresponding module views immediately upon switching
-    if (tabId === 'habits') {
-      BerryPulseHabits.render();
-    } else if (tabId === 'nutrition') {
-      BerryPulseNutrition.render();
-    } else if (tabId === 'activity') {
-      BerryPulseActivity.render();
-      BerryPulseAppleWatch.render();
-    } else if (tabId === 'water') {
-      BerryPulseWater.render();
-    } else if (tabId === 'sleep') {
-      BerryPulseSleep.render();
-    } else if (tabId === 'mindfulness') {
-      BerryPulseMindfulness.render();
-    } else if (tabId === 'analytics' || tabId === 'overview') {
-      BerryPulseSleep.render();
-      setTimeout(() => BerryPulseCharts.renderAll(), 50);
+    // Re-render corresponding module views safely
+    try {
+      if (tabId === 'habits' && window.BerryPulseHabits) {
+        BerryPulseHabits.render();
+      } else if (tabId === 'nutrition' && window.BerryPulseNutrition) {
+        BerryPulseNutrition.render();
+      } else if (tabId === 'activity') {
+        if (window.BerryPulseActivity) BerryPulseActivity.render();
+        if (window.BerryPulseAppleWatch) BerryPulseAppleWatch.render();
+      } else if (tabId === 'water' && window.BerryPulseWater) {
+        BerryPulseWater.render();
+      } else if (tabId === 'sleep' && window.BerryPulseSleep) {
+        BerryPulseSleep.render();
+      } else if (tabId === 'mindfulness' && window.BerryPulseMindfulness) {
+        BerryPulseMindfulness.render();
+      } else if (tabId === 'analytics' || tabId === 'overview') {
+        if (window.BerryPulseSleep) BerryPulseSleep.render();
+        if (window.BerryPulseCharts) setTimeout(() => BerryPulseCharts.renderAll(), 50);
+      }
+    } catch (err) {
+      console.error(`BerryPulseApp: Error rendering view for tab ${tabId}:`, err);
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {}
   },
 
   shiftActiveDate: function(offsetDays) {
@@ -316,10 +351,27 @@ const BerryPulseApp = {
   }
 };
 
-// Auto-run on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  BerryPulseApp.init();
+window.BerryPulseApp = BerryPulseApp;
+
+// Global delegated click listener so clicking tabs always works immediately
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-tab-target]');
+  if (btn && btn.dataset && btn.dataset.tabTarget) {
+    e.preventDefault();
+    if (window.BerryPulseApp && typeof window.BerryPulseApp.switchTab === 'function') {
+      window.BerryPulseApp.switchTab(btn.dataset.tabTarget);
+    }
+  }
 });
+
+// Auto-run when DOM is ready or immediately if already loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    BerryPulseApp.init();
+  });
+} else {
+  BerryPulseApp.init();
+}
 
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseApp;

@@ -339,6 +339,8 @@ Schema:
   }
 };
 
+window.BerryPulseAI = BerryPulseAI;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseAI;
 }
