@@ -288,9 +288,9 @@
 
                     <button onclick="BerryPulseAppleWatch.openSyncModal()" class="flex items-center gap-2 text-xs px-3 py-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/40 text-berry-200 transition">
           <span class="text-base">⌚</span>
-          <span id="watch-device-name" class="font-medium hidden sm:inline">Apple Watch</span>
-          <span id="watch-status-badge" class="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
-            <span class="h-2 w-2 rounded-full bg-emerald-400"></span> Connected
+          <span id="header-watch-device-name" class="font-medium hidden sm:inline">Apple Watch</span>
+          <span id="header-watch-status-badge" class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+            <span class="h-2 w-2 rounded-full bg-slate-500"></span> Not Connected
           </span>
         </button>
 
@@ -809,23 +809,25 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h3 class="text-xl font-bold text-white" id="watch-device-name">Apple Watch Ultra 2</h3>
-                                    <span id="watch-status-badge" class="text-xs text-emerald-400 font-semibold">Connected</span>
+                                    <h3 class="text-xl font-bold text-white" id="activity-watch-device-name">Apple Watch Ultra 2</h3>
+                                    <span id="activity-watch-status-badge" class="flex items-center gap-1 text-slate-400 font-semibold text-xs">
+                                        <span class="h-2 w-2 rounded-full bg-slate-500"></span> Not Connected
+                                    </span>
                                 </div>
-                                <p class="text-xs text-berry-300/80 mt-1">
-                                    <span id="watch-battery-level">84% Battery</span> • <span id="watch-last-sync-time">Synced 12m ago</span>
+                                <p id="activity-watch-subtext" class="text-xs text-berry-300/80 mt-1">
+                                    Pair your Apple Watch to automatically stream Move, Exercise, and Stand rings.
                                 </p>
                             </div>
                         </div>
 
                         <!-- Watch Actions -->
                         <div class="flex items-center gap-3">
-                            <button onclick="BerryPulseAppleWatch.openSyncModal()" class="px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold transition shadow-lg shadow-pink-600/30 flex items-center gap-2">
-              <span>⌚ Apple Watch Sync Hub</span>
-            </button>
+                            <button id="btn-activity-watch-action" onclick="BerryPulseAppleWatch.openSyncModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-bold transition shadow-lg shadow-pink-600/30 flex items-center gap-2">
+                                <span>⌚ Connect Apple Watch</span>
+                            </button>
                             <button onclick="BerryPulseActivity.openWorkoutModal()" class="px-4 py-2.5 rounded-xl bg-berry-800 hover:bg-berry-700 text-berry-200 text-xs font-semibold transition border border-berry-700/50">
-              + Manual Workout
-            </button>
+                                + Manual Workout
+                            </button>
                         </div>
 
                     </div>
@@ -983,14 +985,14 @@
                                 </div>
                                 <div>
                                     <h4 class="font-bold text-white text-sm">Apple Watch Sleep Sensor Stream</h4>
-                                    <p class="text-xs text-emerald-400 font-semibold">● Paired & Monitoring Sleep Architecture</p>
+                                    <p id="sleep-watch-sensor-status" class="text-xs text-slate-400 font-medium flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-slate-500 inline-block"></span> Disconnected • Connect watch to stream live sleep stages</p>
                                 </div>
                             </div>
 
                             <!-- Apple Watch Sleep Sync Action -->
                             <button id="btn-sync-sleep-watch" onclick="BerryPulseSleep.syncAppleWatchSleep()" class="px-4 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-pink-600/30 transition flex items-center gap-2">
-              <span>🔄 Sync Sleep from Apple Watch Now</span>
-            </button>
+                                <span>⌚ Connect Apple Watch to Sync Sleep</span>
+                            </button>
                         </div>
 
                         <!-- Watch Biometric Sensors Display -->
@@ -1587,34 +1589,40 @@
             </div>
 
             <!-- Live Watch State -->
-            <div class="mt-5 p-4 rounded-2xl bg-berry-900/60 border border-berry-700/50 flex items-center justify-between">
+            <div id="modal-watch-state-card" class="mt-5 p-4 rounded-2xl bg-berry-900/60 border border-berry-700/50 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-black border border-slate-700 flex items-center justify-center text-xl">
+                    <div class="w-12 h-12 rounded-xl bg-black/60 border border-slate-800 flex items-center justify-center text-xl opacity-70">
                         ⌚
                     </div>
                     <div>
                         <h4 class="font-bold text-white text-sm">Apple Watch Ultra 2</h4>
-                        <p class="text-xs text-emerald-400 font-semibold">● Connected • HealthKit Active</p>
+                        <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                            <span class="h-2 w-2 rounded-full bg-slate-500 inline-block"></span> Not Connected • HealthKit Inactive
+                        </p>
                     </div>
                 </div>
-                <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">84% Battery</span>
+                <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-medium">Offline</span>
             </div>
 
             <!-- Sync Progress -->
             <div class="mt-4 space-y-2">
                 <div class="flex justify-between text-xs">
-                    <span id="watch-sync-progress-text" class="text-berry-300">Ready to synchronize activity rings</span>
+                    <span id="watch-sync-progress-text" class="text-berry-300">Ready to synchronize</span>
                 </div>
                 <div class="w-full bg-berry-950 h-2 rounded-full overflow-hidden">
                     <div id="watch-sync-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-600 transition-all duration-300" style="width: 0%;"></div>
                 </div>
             </div>
 
-            <!-- Action: Trigger Live Sync -->
-            <div class="mt-5 space-y-3">
-                <button id="btn-sync-watch-now" onclick="BerryPulseAppleWatch.triggerLiveSync()" class="w-full py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-pink-600/30 transition flex items-center justify-center gap-2">
-          <span>🔄 Sync Apple Watch Activity Rings Now</span>
-        </button>
+            <!-- Action: Trigger Live Sync or Connect -->
+            <div id="modal-watch-actions" class="mt-5 space-y-3">
+                <button id="btn-connect-watch-modal" onclick="BerryPulseAppleWatch.connectWatch()" class="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-pink-600/30 transition flex items-center justify-center gap-2">
+                    <span>⌚ Connect Apple Watch</span>
+                </button>
+                <p class="text-[11px] text-berry-300/80 text-center leading-relaxed">
+                    Tap above to connect your Apple Watch via Bluetooth & HealthKit to stream live rings and biometric sensors.
+                </p>
+            </div>
 
                 <!-- Action: Import Apple Health Export XML / JSON -->
                 <div class="p-3.5 rounded-2xl bg-berry-900/40 border border-berry-800/60 text-center">
@@ -2331,20 +2339,20 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/auth.js?v=3.0.0"></script>
-    <script src="js/data.js?v=3.0.0"></script>
-    <script src="js/storage.js?v=3.0.0"></script>
-    <script src="js/ai-nutrition.js?v=3.0.0"></script>
-    <script src="js/ai-advisor.js?v=3.0.0"></script>
-    <script src="js/nutrition.js?v=3.0.0"></script>
-    <script src="js/habits.js?v=3.0.0"></script>
-    <script src="js/activity.js?v=3.0.0"></script>
-    <script src="js/apple-watch.js?v=3.0.0"></script>
-    <script src="js/water.js?v=3.0.0"></script>
-    <script src="js/sleep.js?v=3.0.0"></script>
-    <script src="js/mindfulness.js?v=3.0.0"></script>
-    <script src="js/charts.js?v=3.0.0"></script>
-    <script src="js/app.js?v=3.0.0"></script>
+    <script src="js/auth.js?v=3.1.0"></script>
+    <script src="js/data.js?v=3.1.0"></script>
+    <script src="js/storage.js?v=3.1.0"></script>
+    <script src="js/ai-nutrition.js?v=3.1.0"></script>
+    <script src="js/ai-advisor.js?v=3.1.0"></script>
+    <script src="js/nutrition.js?v=3.1.0"></script>
+    <script src="js/habits.js?v=3.1.0"></script>
+    <script src="js/activity.js?v=3.1.0"></script>
+    <script src="js/apple-watch.js?v=3.1.0"></script>
+    <script src="js/water.js?v=3.1.0"></script>
+    <script src="js/sleep.js?v=3.1.0"></script>
+    <script src="js/mindfulness.js?v=3.1.0"></script>
+    <script src="js/charts.js?v=3.1.0"></script>
+    <script src="js/app.js?v=3.1.0"></script>
 </body>
 
 </html>
