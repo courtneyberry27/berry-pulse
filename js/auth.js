@@ -197,7 +197,6 @@ const BerryPulseAuth = {
       landing.style.display = 'flex';
     }
     this.renderLandingCapacityBadge();
-    this.renderLandingProfilesGrid();
   },
 
   unlockApp: function () {
@@ -434,7 +433,7 @@ const BerryPulseAuth = {
   },
 
   switchLandingTab: function (tabName) {
-    const tabs = ['login', 'signup', 'profiles'];
+    const tabs = ['login', 'signup'];
     tabs.forEach(t => {
       const btn = document.getElementById(`auth-landing-tab-${t}`);
       const pane = document.getElementById(`auth-landing-pane-${t}`);
@@ -456,9 +455,6 @@ const BerryPulseAuth = {
       }
     });
 
-    if (tabName === 'profiles') {
-      this.renderLandingProfilesGrid();
-    }
     this.renderLandingCapacityBadge();
   },
 

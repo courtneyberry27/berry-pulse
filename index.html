@@ -94,16 +94,13 @@
         <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">RBAC GATED</span>
       </div>
 
-      <!-- Navigation Tabs (Log In, Sign Up, Quick Profiles) -->
+      <!-- Navigation Tabs (Log In, Sign Up) -->
       <div class="flex gap-2 p-1.5 bg-berry-900/60 rounded-2xl border border-berry-700/50 mb-6">
         <button id="auth-landing-tab-login" type="button" onclick="BerryPulseAuth.switchLandingTab('login')" class="flex-1 py-3 rounded-2xl text-xs font-bold bg-pink-600 text-white shadow-lg shadow-pink-600/30 transition">
           🔑 Log In
         </button>
         <button id="auth-landing-tab-signup" type="button" onclick="BerryPulseAuth.switchLandingTab('signup')" class="flex-1 py-3 rounded-2xl text-xs font-semibold bg-berry-900/60 text-berry-300 hover:text-white transition">
           ➕ Sign Up
-        </button>
-        <button id="auth-landing-tab-profiles" type="button" onclick="BerryPulseAuth.switchLandingTab('profiles')" class="flex-1 py-3 rounded-2xl text-xs font-semibold bg-berry-900/60 text-berry-300 hover:text-white transition">
-          👥 Quick Profiles
         </button>
       </div>
 
@@ -136,30 +133,14 @@
           <span>→</span>
         </button>
 
-        <!-- Active Usernames Helper -->
-        <div class="pt-4 border-t border-berry-800/60">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-berry-300">Active Accounts:</span>
-            <span class="text-[10px] text-emerald-400 font-semibold">Password for all: <code class="font-bold text-pink-300">test</code></span>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="BerryPulseAuth.fillLoginForm('courtney')" class="p-2.5 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
-              <span class="text-base block mb-0.5">👑</span>
-              <span class="text-xs font-bold text-white group-hover:text-pink-300 block truncate">Courtney</span>
-              <span class="text-[10px] text-purple-400 block font-mono">@courtney</span>
-            </button>
-            <button type="button" onclick="BerryPulseAuth.fillLoginForm('alex')" class="p-2.5 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
-              <span class="text-base block mb-0.5">🏃</span>
-              <span class="text-xs font-bold text-white group-hover:text-pink-300 block truncate">Alex</span>
-              <span class="text-[10px] text-emerald-400 block font-mono">@alex</span>
-            </button>
-            <button type="button" onclick="BerryPulseAuth.fillLoginForm('jordan')" class="p-2.5 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
-              <span class="text-base block mb-0.5">🧘</span>
-              <span class="text-xs font-bold text-white group-hover:text-pink-300 block truncate">Jordan</span>
-              <span class="text-[10px] text-emerald-400 block font-mono">@jordan</span>
-            </button>
-          </div>
-          <p class="text-[10px] text-berry-400 mt-2 text-center">Click a username above or type it, then click Log In.</p>
+        <!-- Credentials Helper Note -->
+        <div class="pt-3 border-t border-berry-800/60 text-center space-y-1">
+          <p class="text-xs text-berry-300">
+            Available Users: <span class="text-white font-mono font-semibold">@courtney</span> (Admin), <span class="text-white font-mono font-semibold">@alex</span>, <span class="text-white font-mono font-semibold">@jordan</span>
+          </p>
+          <p class="text-[11px] text-berry-400">
+            Password for all users: <code class="text-pink-300 font-bold bg-pink-950/70 border border-pink-500/30 px-1.5 py-0.5 rounded">test</code>
+          </p>
         </div>
       </div>
 
@@ -248,12 +229,6 @@
         <p class="text-[11px] text-berry-400 text-center leading-relaxed">
           Up to 10 isolated accounts supported with dedicated nutrition, water, habits, and workouts.
         </p>
-      </div>
-
-      <!-- TAB 3: QUICK PROFILES PANE -->
-      <div id="auth-landing-pane-profiles" class="space-y-3 hidden">
-        <p class="text-xs text-berry-300/80 mb-2">Select an active account profile to continue:</p>
-        <div id="auth-landing-profiles-grid" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar"></div>
       </div>
 
     </div>
@@ -2317,19 +2292,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/auth.js?v=2.4.0"></script>
-  <script src="js/data.js?v=2.4.0"></script>
-  <script src="js/storage.js?v=2.4.0"></script>
-  <script src="js/ai-nutrition.js?v=2.4.0"></script>
-  <script src="js/ai-advisor.js?v=2.4.0"></script>
-  <script src="js/nutrition.js?v=2.4.0"></script>
-  <script src="js/habits.js?v=2.4.0"></script>
-  <script src="js/activity.js?v=2.4.0"></script>
-  <script src="js/apple-watch.js?v=2.4.0"></script>
-  <script src="js/water.js?v=2.4.0"></script>
-  <script src="js/sleep.js?v=2.4.0"></script>
-  <script src="js/mindfulness.js?v=2.4.0"></script>
-  <script src="js/charts.js?v=2.4.0"></script>
-  <script src="js/app.js?v=2.4.0"></script>
+  <script src="js/auth.js?v=2.5.0"></script>
+  <script src="js/data.js?v=2.5.0"></script>
+  <script src="js/storage.js?v=2.5.0"></script>
+  <script src="js/ai-nutrition.js?v=2.5.0"></script>
+  <script src="js/ai-advisor.js?v=2.5.0"></script>
+  <script src="js/nutrition.js?v=2.5.0"></script>
+  <script src="js/habits.js?v=2.5.0"></script>
+  <script src="js/activity.js?v=2.5.0"></script>
+  <script src="js/apple-watch.js?v=2.5.0"></script>
+  <script src="js/water.js?v=2.5.0"></script>
+  <script src="js/sleep.js?v=2.5.0"></script>
+  <script src="js/mindfulness.js?v=2.5.0"></script>
+  <script src="js/charts.js?v=2.5.0"></script>
+  <script src="js/app.js?v=2.5.0"></script>
 </body>
 </html>
