@@ -6,16 +6,16 @@
 
 const BerryPulseAuth = {
   MAX_ACCOUNTS: 10,
-  STORAGE_KEY_ACCOUNTS: 'berrypulse_accounts_v2',
-  STORAGE_KEY_SESSION: 'berrypulse_active_session_v2',
+  STORAGE_KEY_ACCOUNTS: 'berrypulse_accounts_v3',
+  STORAGE_KEY_SESSION: 'berrypulse_active_session_v5',
 
-  // Pre-seeded starter accounts (3 initial accounts; 7 slots open for 10 total)
+  // Pre-seeded starter accounts (Password for all users: test)
   defaultAccounts: [
     {
       id: 'usr_courtney',
       username: 'courtney',
       displayName: 'Courtney',
-      pin: '1234',
+      pin: 'test',
       role: 'admin', // 'admin' | 'member'
       avatar: '👑',
       createdAt: '2026-10-01',
@@ -26,7 +26,7 @@ const BerryPulseAuth = {
       id: 'usr_alex',
       username: 'alex',
       displayName: 'Alex',
-      pin: '1234',
+      pin: 'test',
       role: 'member',
       avatar: '🏃',
       createdAt: '2026-10-05',
@@ -37,7 +37,7 @@ const BerryPulseAuth = {
       id: 'usr_jordan',
       username: 'jordan',
       displayName: 'Jordan',
-      pin: '1234',
+      pin: 'test',
       role: 'member',
       avatar: '🧘',
       createdAt: '2026-10-08',
@@ -60,12 +60,50 @@ const BerryPulseAuth = {
     }
   },
 
-  // Ensure accounts array exists in localStorage
+  // Ensure accounts array exists & all users have username and password 'test'
   ensureAccountsStorage: function () {
     try {
+      // Clear legacy storage session keys so users MUST log in before seeing anything
+      ['berrypulse_active_session', 'berrypulse_active_session_v1', 'berrypulse_active_session_v2', 'berrypulse_active_session_v3', 'berrypulse_active_session_v4'].forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+        try { sessionStorage.removeItem(k); } catch (e) {}
+      });
+
       const stored = localStorage.getItem(this.STORAGE_KEY_ACCOUNTS);
       if (!stored) {
-        localStorage.setItem(this.STORAGE_KEY_ACCOUNTS, JSON.stringify(this.defaultAccounts));
+        // Also check if v2 accounts exist to preserve any user-created accounts
+        const prevStored = localStorage.getItem('berrypulse_accounts_v2');
+        let accounts = [...this.defaultAccounts];
+        if (prevStored) {
+          try {
+            const parsed = JSON.parse(prevStored);
+            if (Array.isArray(parsed) && parsed.length > 0) accounts = parsed;
+          } catch (e) {}
+        }
+        // Guarantee password is 'test' and username is set for all accounts
+        accounts.forEach(acc => {
+          acc.pin = 'test';
+          if (!acc.username) acc.username = (acc.displayName || acc.id).toLowerCase().replace(/[^a-z0-9]/g, '');
+        });
+        localStorage.setItem(this.STORAGE_KEY_ACCOUNTS, JSON.stringify(accounts));
+      } else {
+        const accounts = JSON.parse(stored);
+        if (Array.isArray(accounts)) {
+          let updated = false;
+          accounts.forEach(acc => {
+            if (acc.pin !== 'test') {
+              acc.pin = 'test';
+              updated = true;
+            }
+            if (!acc.username) {
+              acc.username = (acc.displayName || acc.id).toLowerCase().replace(/[^a-z0-9]/g, '');
+              updated = true;
+            }
+          });
+          if (updated) {
+            localStorage.setItem(this.STORAGE_KEY_ACCOUNTS, JSON.stringify(accounts));
+          }
+        }
       }
     } catch (e) {
       console.warn('BerryPulseAuth: error initializing accounts storage', e);
@@ -105,10 +143,11 @@ const BerryPulseAuth = {
     return accounts.find(a => a.username.toLowerCase() === clean) || null;
   },
 
-  // Session handling (strictly gated: does NOT auto-login so landing page is shown first)
+  // Session handling (strictly gated: user MUST log in before seeing anything)
   restoreSession: function () {
     try {
-      const saved = localStorage.getItem(this.STORAGE_KEY_SESSION) || sessionStorage.getItem(this.STORAGE_KEY_SESSION);
+      // Only restore from current tab's active sessionStorage if user already logged in during this active browsing tab
+      const saved = sessionStorage.getItem(this.STORAGE_KEY_SESSION);
       if (saved) {
         const session = JSON.parse(saved);
         const account = this.getAccountById(session.userId);
@@ -126,18 +165,17 @@ const BerryPulseAuth = {
       console.warn('BerryPulseAuth: error restoring session', e);
     }
 
-    // Require landing Sign Up / Log In screen when landing on URL without active session
+    // Default to locked landing screen: user must log in before seeing anything
     this.currentSession = null;
   },
 
   saveSession: function () {
     try {
       if (this.currentSession) {
+        sessionStorage.setItem(this.STORAGE_KEY_SESSION, JSON.stringify(this.currentSession));
         if (this.currentSession.rememberMe) {
           localStorage.setItem(this.STORAGE_KEY_SESSION, JSON.stringify(this.currentSession));
-          sessionStorage.removeItem(this.STORAGE_KEY_SESSION);
         } else {
-          sessionStorage.setItem(this.STORAGE_KEY_SESSION, JSON.stringify(this.currentSession));
           localStorage.removeItem(this.STORAGE_KEY_SESSION);
         }
       } else {
@@ -236,13 +274,18 @@ const BerryPulseAuth = {
 
   // Login handler
   login: function (username, pin, rememberMe = true) {
+    if (!username) {
+      throw new Error('Please enter your username (e.g. courtney, alex, jordan).');
+    }
     const account = this.getAccountByUsername(username);
     if (!account) {
-      throw new Error(`Account "${username}" was not found.`);
+      throw new Error(`Account "@${username}" was not found. Please choose an active username or Sign Up.`);
     }
 
-    if (account.pin && account.pin !== pin.trim()) {
-      throw new Error('Incorrect PIN or password. Please try again.');
+    const entered = (pin || '').trim();
+    // For all users, password is 'test' for right now
+    if (entered !== 'test' && entered !== account.pin) {
+      throw new Error('Incorrect password. For all users, the password is "test".');
     }
 
     this.currentSession = {
@@ -263,10 +306,21 @@ const BerryPulseAuth = {
     this.hideAuthGateModal();
 
     if (window.BerryPulseApp && BerryPulseApp.showToast) {
-      BerryPulseApp.showToast(`👋 Signed in as ${account.displayName} (${account.role === 'admin' ? 'Admin 👑' : 'Member 👤'})`);
+      BerryPulseApp.showToast(`👋 Welcome back, ${account.displayName}! Signed in as ${account.role === 'admin' ? 'Admin 👑' : 'Member 👤'}`);
     }
 
     return account;
+  },
+
+  // Helper to populate login form fields
+  fillLoginForm: function (username) {
+    const userInp = document.getElementById('auth-login-user');
+    const pinInp = document.getElementById('auth-login-pin');
+    const errEl = document.getElementById('auth-login-error');
+    if (userInp) userInp.value = username;
+    if (pinInp) pinInp.value = 'test';
+    if (errEl) errEl.classList.add('hidden');
+    if (userInp) userInp.focus();
   },
 
   // Direct switch to an account (prompts PIN if required)
@@ -320,14 +374,13 @@ const BerryPulseAuth = {
     const pinInp = document.getElementById('auth-login-pin');
     const rememberInp = document.getElementById('auth-login-remember');
     const errEl = document.getElementById('auth-login-error');
-    if (!userInp || !pinInp) return;
+    if (!userInp) return;
 
     try {
       const u = userInp.value.trim();
-      const p = pinInp.value.trim();
+      const p = (pinInp && pinInp.value.trim()) ? pinInp.value.trim() : 'test';
       const rem = rememberInp ? rememberInp.checked : true;
-      if (!u) throw new Error('Please enter your username.');
-      if (!p) throw new Error('Please enter your PIN or password.');
+      if (!u) throw new Error('Please enter your username (e.g. courtney, alex, jordan).');
       this.login(u, p, rem);
       if (errEl) errEl.classList.add('hidden');
     } catch (err) {
@@ -351,7 +404,7 @@ const BerryPulseAuth = {
     try {
       const name = nameInp ? nameInp.value.trim() : '';
       const username = userInp ? userInp.value.trim() : '';
-      const pin = pinInp ? pinInp.value.trim() : '';
+      const pin = (pinInp && pinInp.value.trim()) ? pinInp.value.trim() : 'test';
       const role = roleInp ? roleInp.value : 'member';
       const avatar = avatarInp ? avatarInp.value : '🫐';
       const cal = calInp ? parseInt(calInp.value, 10) : 2100;
@@ -359,7 +412,6 @@ const BerryPulseAuth = {
 
       if (!name) throw new Error('Please provide your name.');
       if (!username) throw new Error('Please choose a username.');
-      if (!pin || pin.length < 4) throw new Error('PIN must be at least 4 digits.');
 
       const newAccount = this.createAccount({
         displayName: name,
@@ -426,7 +478,7 @@ const BerryPulseAuth = {
                 <span class="text-sm font-bold text-white group-hover:text-pink-300 transition">${acc.displayName}</span>
                 ${isAdmin ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">ADMIN</span>' : '<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">MEMBER</span>'}
               </div>
-              <p class="text-xs text-berry-300/80 mt-0.5">@${acc.username} • PIN: <code class="text-pink-300">${acc.pin}</code></p>
+              <p class="text-xs text-berry-300/80 mt-0.5">@${acc.username} • Password: <code class="text-pink-300 font-bold">test</code></p>
             </div>
           </div>
           <button type="button" class="px-3 py-1.5 rounded-xl bg-pink-600/30 group-hover:bg-pink-600 text-pink-300 group-hover:text-white text-xs font-bold transition">
@@ -468,7 +520,7 @@ const BerryPulseAuth = {
       throw new Error(`Username "${username}" is already taken.`);
     }
 
-    const pin = (userData.pin || '1234').trim();
+    const pin = (userData.pin || 'test').trim() || 'test';
     if (pin.length < 4) {
       throw new Error('PIN / Password must be at least 4 digits/characters.');
     }
@@ -815,8 +867,8 @@ const BerryPulseAuth = {
     const account = this.getAccountById(targetId);
     if (!account) return;
 
-    if (account.pin && account.pin !== pin.trim()) {
-      errorEl.textContent = 'Incorrect PIN. Default demo PIN is 1234.';
+    if (pin.trim() !== 'test' && account.pin && account.pin !== pin.trim()) {
+      errorEl.textContent = 'Incorrect password. Password for all users is "test".';
       errorEl.classList.remove('hidden');
       return;
     }

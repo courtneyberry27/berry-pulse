@@ -110,16 +110,16 @@
       <!-- TAB 1: LOG IN PANE -->
       <div id="auth-landing-pane-login" class="space-y-4">
         <div>
-          <label for="auth-login-user" class="text-xs font-bold text-berry-200 block mb-1.5">Username or Account</label>
-          <input type="text" id="auth-login-user" placeholder="e.g. courtney, alex, jordan" onkeydown="if(event.key==='Enter') BerryPulseAuth.handleLandingLogin()" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-4 py-3 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition shadow-inner" />
+          <label for="auth-login-user" class="text-xs font-bold text-berry-200 block mb-1.5">Username</label>
+          <input type="text" id="auth-login-user" placeholder="Enter username (e.g. courtney, alex, jordan)" onkeydown="if(event.key==='Enter') BerryPulseAuth.handleLandingLogin()" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-4 py-3 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition shadow-inner" />
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <label for="auth-login-pin" class="text-xs font-bold text-berry-200 block">PIN / Password</label>
-            <span class="text-[10px] text-berry-400">Demo PIN: <code>1234</code></span>
+            <label for="auth-login-pin" class="text-xs font-bold text-berry-200 block">Password</label>
+            <span class="text-[10px] text-pink-300 font-bold bg-pink-950/70 border border-pink-500/30 px-2 py-0.5 rounded-full">Password for all users: <code>test</code></span>
           </div>
-          <input type="password" id="auth-login-pin" placeholder="Enter PIN (4 digits)" onkeydown="if(event.key==='Enter') BerryPulseAuth.handleLandingLogin()" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-4 py-3 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition shadow-inner" />
+          <input type="password" id="auth-login-pin" value="test" placeholder="Password (default: test)" onkeydown="if(event.key==='Enter') BerryPulseAuth.handleLandingLogin()" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-4 py-3 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition shadow-inner" />
         </div>
 
         <div class="flex items-center justify-between pt-1">
@@ -136,26 +136,30 @@
           <span>→</span>
         </button>
 
-        <!-- 1-Click Demo Profiles Helper -->
+        <!-- Active Usernames Helper -->
         <div class="pt-4 border-t border-berry-800/60">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-berry-300 block mb-2">1-Click Demo Quick Access:</span>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-berry-300">Active Accounts:</span>
+            <span class="text-[10px] text-emerald-400 font-semibold">Password for all: <code class="font-bold text-pink-300">test</code></span>
+          </div>
           <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="BerryPulseAuth.switchAccount('usr_courtney', true)" class="p-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
+            <button type="button" onclick="BerryPulseAuth.fillLoginForm('courtney')" class="p-2.5 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
               <span class="text-base block mb-0.5">👑</span>
               <span class="text-xs font-bold text-white group-hover:text-pink-300 block truncate">Courtney</span>
-              <span class="text-[10px] text-purple-400 block">Admin</span>
+              <span class="text-[10px] text-purple-400 block font-mono">@courtney</span>
             </button>
-            <button type="button" onclick="BerryPulseAuth.switchAccount('usr_alex', true)" class="p-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
+            <button type="button" onclick="BerryPulseAuth.fillLoginForm('alex')" class="p-2.5 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
               <span class="text-base block mb-0.5">🏃</span>
               <span class="text-xs font-bold text-white group-hover:text-pink-300 block truncate">Alex</span>
-              <span class="text-[10px] text-emerald-400 block">Member</span>
+              <span class="text-[10px] text-emerald-400 block font-mono">@alex</span>
             </button>
-            <button type="button" onclick="BerryPulseAuth.switchAccount('usr_jordan', true)" class="p-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
+            <button type="button" onclick="BerryPulseAuth.fillLoginForm('jordan')" class="p-2.5 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 text-left transition group">
               <span class="text-base block mb-0.5">🧘</span>
               <span class="text-xs font-bold text-white group-hover:text-pink-300 block truncate">Jordan</span>
-              <span class="text-[10px] text-emerald-400 block">Member</span>
+              <span class="text-[10px] text-emerald-400 block font-mono">@jordan</span>
             </button>
           </div>
+          <p class="text-[10px] text-berry-400 mt-2 text-center">Click a username above or type it, then click Log In.</p>
         </div>
       </div>
 
@@ -172,8 +176,8 @@
             <input type="text" id="auth-signup-user" placeholder="e.g. maya" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition" />
           </div>
           <div>
-            <label for="auth-signup-pin" class="text-xs font-bold text-berry-200 block mb-1">Security PIN</label>
-            <input type="password" id="auth-signup-pin" placeholder="4-digit PIN (e.g. 5678)" maxlength="8" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition" />
+            <label for="auth-signup-pin" class="text-xs font-bold text-berry-200 block mb-1">Password</label>
+            <input type="password" id="auth-signup-pin" value="test" placeholder="Password (default: test)" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500 transition" />
           </div>
         </div>
 
@@ -2114,8 +2118,8 @@
         </div>
 
         <div>
-          <label class="text-xs font-bold text-berry-200 block mb-1">PIN / Password</label>
-          <input type="password" id="auth-signin-pin" placeholder="Enter PIN (Demo default: 1234)" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500" />
+          <label class="text-xs font-bold text-berry-200 block mb-1">Password</label>
+          <input type="password" id="auth-signin-pin" value="test" placeholder="Enter password (default: test)" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500" />
         </div>
 
         <div id="auth-signin-error" class="hidden text-xs text-rose-300 bg-rose-950/60 p-2.5 rounded-xl border border-rose-500/30"></div>
@@ -2124,21 +2128,21 @@
           Sign In to BerryPulse
         </button>
 
-        <!-- One-Click Demo Accounts -->
+        <!-- Demo Accounts -->
         <div class="pt-3 border-t border-berry-800/60">
-          <p class="text-[11px] font-semibold text-berry-300/80 mb-2">⚡ Quick 1-Click Demo Logins (PIN: 1234):</p>
+          <p class="text-[11px] font-semibold text-berry-300/80 mb-2">⚡ Quick Logins (Password for all: <code class="text-pink-300 font-bold">test</code>):</p>
           <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="BerryPulseAuth.login('courtney', '1234')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
+            <button type="button" onclick="BerryPulseAuth.login('courtney', 'test')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
               <span class="text-lg">👑</span>
               <div class="text-[11px] font-bold text-white group-hover:text-pink-300">Courtney</div>
               <div class="text-[9px] text-purple-400 font-semibold">Admin</div>
             </button>
-            <button type="button" onclick="BerryPulseAuth.login('alex', '1234')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
+            <button type="button" onclick="BerryPulseAuth.login('alex', 'test')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
               <span class="text-lg">🏃</span>
               <div class="text-[11px] font-bold text-white group-hover:text-pink-300">Alex</div>
               <div class="text-[9px] text-emerald-400 font-semibold">Member</div>
             </button>
-            <button type="button" onclick="BerryPulseAuth.login('jordan', '1234')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
+            <button type="button" onclick="BerryPulseAuth.login('jordan', 'test')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
               <span class="text-lg">🧘</span>
               <div class="text-[11px] font-bold text-white group-hover:text-pink-300">Jordan</div>
               <div class="text-[9px] text-emerald-400 font-semibold">Member</div>
@@ -2169,8 +2173,8 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-xs font-bold text-berry-200 block mb-1">PIN / Password (4+ digits)</label>
-            <input type="password" id="auth-reg-pin" placeholder="e.g. 5678" value="1234" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
+            <label class="text-xs font-bold text-berry-200 block mb-1">Password</label>
+            <input type="password" id="auth-reg-pin" placeholder="test" value="test" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
           </div>
 
           <div>
@@ -2248,8 +2252,8 @@
       <p id="auth-pin-target-username" class="text-xs text-berry-300 mb-4"></p>
       <input type="hidden" id="auth-pin-target-id" />
 
-      <p class="text-xs text-berry-200 mb-2">Enter account PIN / password (Demo PIN: 1234):</p>
-      <input type="password" id="auth-pin-input" maxlength="8" class="text-center text-xl font-bold tracking-widest bg-berry-900 border border-berry-700 rounded-xl px-4 py-2.5 w-44 text-white focus:outline-none focus:border-pink-500 mb-3" onkeydown="if(event.key==='Enter') BerryPulseAuth.submitPinPrompt()" />
+      <p class="text-xs text-berry-200 mb-2">Enter account password (Password for all users: <code class="text-pink-300 font-bold">test</code>):</p>
+      <input type="password" id="auth-pin-input" value="test" placeholder="test" maxlength="8" class="text-center text-xl font-bold tracking-widest bg-berry-900 border border-berry-700 rounded-xl px-4 py-2.5 w-44 text-white focus:outline-none focus:border-pink-500 mb-3" onkeydown="if(event.key==='Enter') BerryPulseAuth.submitPinPrompt()" />
 
       <p id="auth-pin-error" class="hidden text-xs text-rose-400 mb-3"></p>
 
@@ -2313,19 +2317,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/auth.js?v=2.3.0"></script>
-  <script src="js/data.js?v=2.3.0"></script>
-  <script src="js/storage.js?v=2.3.0"></script>
-  <script src="js/ai-nutrition.js?v=2.3.0"></script>
-  <script src="js/ai-advisor.js?v=2.3.0"></script>
-  <script src="js/nutrition.js?v=2.3.0"></script>
-  <script src="js/habits.js?v=2.3.0"></script>
-  <script src="js/activity.js?v=2.3.0"></script>
-  <script src="js/apple-watch.js?v=2.3.0"></script>
-  <script src="js/water.js?v=2.3.0"></script>
-  <script src="js/sleep.js?v=2.3.0"></script>
-  <script src="js/mindfulness.js?v=2.3.0"></script>
-  <script src="js/charts.js?v=2.3.0"></script>
-  <script src="js/app.js?v=2.3.0"></script>
+  <script src="js/auth.js?v=2.4.0"></script>
+  <script src="js/data.js?v=2.4.0"></script>
+  <script src="js/storage.js?v=2.4.0"></script>
+  <script src="js/ai-nutrition.js?v=2.4.0"></script>
+  <script src="js/ai-advisor.js?v=2.4.0"></script>
+  <script src="js/nutrition.js?v=2.4.0"></script>
+  <script src="js/habits.js?v=2.4.0"></script>
+  <script src="js/activity.js?v=2.4.0"></script>
+  <script src="js/apple-watch.js?v=2.4.0"></script>
+  <script src="js/water.js?v=2.4.0"></script>
+  <script src="js/sleep.js?v=2.4.0"></script>
+  <script src="js/mindfulness.js?v=2.4.0"></script>
+  <script src="js/charts.js?v=2.4.0"></script>
+  <script src="js/app.js?v=2.4.0"></script>
 </body>
 </html>
