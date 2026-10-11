@@ -284,7 +284,7 @@ const BerryPulseAuth = {
     const entered = (pin || '').trim();
     // For all users, password is 'test' for right now
     if (entered !== 'test' && entered !== account.pin) {
-      throw new Error('Incorrect password. For all users, the password is "test".');
+      throw new Error('Incorrect password. Please try again.');
     }
 
     this.currentSession = {
@@ -864,7 +864,7 @@ const BerryPulseAuth = {
     if (!account) return;
 
     if (pin.trim() !== 'test' && account.pin && account.pin !== pin.trim()) {
-      errorEl.textContent = 'Incorrect password. Password for all users is "test".';
+      errorEl.textContent = 'Incorrect password. Please try again.';
       errorEl.classList.remove('hidden');
       return;
     }
