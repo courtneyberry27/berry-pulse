@@ -177,6 +177,8 @@ const BerryPulseWater = {
   }
 };
 
+window.BerryPulseWater = BerryPulseWater;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseWater;
 }

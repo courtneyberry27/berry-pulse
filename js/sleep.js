@@ -539,6 +539,8 @@ const BerryPulseSleep = {
   }
 };
 
+window.BerryPulseSleep = BerryPulseSleep;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseSleep;
 }

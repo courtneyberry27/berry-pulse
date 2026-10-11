@@ -257,6 +257,8 @@ const BerryPulseMindfulness = {
   }
 };
 
+window.BerryPulseMindfulness = BerryPulseMindfulness;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseMindfulness;
 }

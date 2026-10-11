@@ -278,6 +278,8 @@ const BerryPulseAppleWatch = {
   }
 };
 
+window.BerryPulseAppleWatch = BerryPulseAppleWatch;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseAppleWatch;
 }

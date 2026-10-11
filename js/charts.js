@@ -412,6 +412,8 @@ const BerryPulseCharts = {
   }
 };
 
+window.BerryPulseCharts = BerryPulseCharts;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseCharts;
 }

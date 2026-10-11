@@ -267,6 +267,8 @@ const BerryPulseStorage = {
     }
   };
 
+  window.BerryPulseStorage = BerryPulseStorage;
+
   if(typeof module !== 'undefined') {
     module.exports = BerryPulseStorage;
 }

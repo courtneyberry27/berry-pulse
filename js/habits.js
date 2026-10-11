@@ -213,6 +213,8 @@ deleteHabit: function(habitId) {
 }
 };
 
+window.BerryPulseHabits = BerryPulseHabits;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseHabits;
 }

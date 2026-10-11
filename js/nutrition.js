@@ -278,6 +278,7 @@ const BerryPulseNutrition = {
     if (modal) {
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      modal.style.display = 'flex';
     }
   },
 
@@ -286,6 +287,7 @@ const BerryPulseNutrition = {
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+      modal.style.display = 'none';
     }
   },
 
@@ -602,6 +604,8 @@ const BerryPulseNutrition = {
     BerryPulseApp.showToast(`Added meal category "${name}"!`);
   }
 };
+
+window.BerryPulseNutrition = BerryPulseNutrition;
 
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseNutrition;

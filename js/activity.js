@@ -194,6 +194,8 @@ const BerryPulseActivity = {
   }
 };
 
+window.BerryPulseActivity = BerryPulseActivity;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseActivity;
 }

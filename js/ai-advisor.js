@@ -66,6 +66,7 @@ const BerryPulseAIAdvisor = {
     this.populateFormFromProfile();
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.style.display = 'flex';
 
     // Run initial calculation with current inputs
     this.generateRecommendations();
@@ -76,6 +77,7 @@ const BerryPulseAIAdvisor = {
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+      modal.style.display = 'none';
     }
   },
 
@@ -585,6 +587,7 @@ const BerryPulseAIAdvisor = {
    * Optional Gemini API enrichment if API key is stored
    */
   enrichWithGemini: async function (recs) {
+    if (!window.BerryPulseAI || typeof BerryPulseAI.getApiKey !== 'function') return;
     const key = BerryPulseAI.getApiKey();
     if (!key) return;
 

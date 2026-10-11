@@ -127,8 +127,10 @@ const BerryPulseApp = {
     document.querySelectorAll('.tab-view-content').forEach(view => {
       if (view.id === `view-${tabId}`) {
         view.classList.remove('hidden');
+        view.style.display = 'block';
       } else {
         view.classList.add('hidden');
+        view.style.display = 'none';
       }
     });
 
@@ -300,6 +302,7 @@ const BerryPulseApp = {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.style.display = 'flex';
   },
 
   closeSettingsModal: function() {
@@ -307,6 +310,7 @@ const BerryPulseApp = {
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+      modal.style.display = 'none';
     }
   },
 

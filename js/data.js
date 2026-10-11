@@ -289,6 +289,8 @@ const BerryPulseData = {
   }
 };
 
+window.BerryPulseData = BerryPulseData;
+
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseData;
 }
