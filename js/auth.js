@@ -325,10 +325,18 @@ const BerryPulseAuth = {
     if (pinInp) pinInp.focus();
   },
 
-  // Direct switch to an account (prompts PIN if required)
+  // Direct switch to an account (prompts PIN if required; restricted to admins)
   switchAccount: function (targetUserId, bypassPin = false) {
     const target = this.getAccountById(targetUserId);
     if (!target) return;
+
+    // Non-admin users cannot switch to other accounts while logged in
+    if (this.currentSession && !this.isAdmin() && this.currentSession.userId !== targetUserId) {
+      if (window.BerryPulseApp && BerryPulseApp.showToast) {
+        BerryPulseApp.showToast('🔒 Account switching is only available for Administrators.');
+      }
+      return;
+    }
 
     if (bypassPin || !target.pin) {
       this.currentSession = {
@@ -677,49 +685,78 @@ const BerryPulseAuth = {
 
         <!-- Dropdown Menu -->
         <div id="user-account-dropdown" class="hidden absolute right-0 mt-2 w-72 rounded-2xl bg-berry-950 border border-berry-700/60 shadow-2xl shadow-purple-950/80 z-50 overflow-hidden backdrop-blur-2xl">
-          <!-- Dropdown Header -->
-          <div class="p-3.5 bg-gradient-to-r from-berry-900/90 to-purple-950/90 border-b border-berry-800/60">
-            <div class="flex items-center justify-between">
+          ${isAdmin ? `
+            <!-- ADMIN: Full Dropdown Functionality -->
+            <div class="p-3.5 bg-gradient-to-r from-berry-900/90 to-purple-950/90 border-b border-berry-800/60">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-2xl">${user.avatar || '👤'}</span>
+                  <div>
+                    <h4 class="text-xs font-extrabold text-white">${user.displayName}</h4>
+                    <p class="text-[10px] text-berry-300/80">@${user.username} • ADMIN</p>
+                  </div>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                  ${this.getAccounts().length}/${this.MAX_ACCOUNTS} Accts
+                </span>
+              </div>
+              <p class="text-[10px] text-berry-300/70 mt-1 italic">${user.bio || 'BerryPulse Wellness'}</p>
+            </div>
+
+            <!-- Switch Accounts List -->
+            <div class="p-2 border-b border-berry-800/40">
+              <div class="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-berry-300 uppercase tracking-wider">
+                <span>Switch Accounts (${this.getAccounts().length}/${this.MAX_ACCOUNTS})</span>
+              </div>
+              <div class="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                ${this.renderDropdownAccountsList(user.id)}
+              </div>
+            </div>
+
+            <!-- Admin Actions -->
+            <div class="p-2 space-y-1 bg-berry-950/60 text-xs font-medium">
+              <button onclick="BerryPulseAuth.showAddAccountModal()" class="w-full text-left px-3 py-2 rounded-xl text-pink-300 hover:bg-berry-900/60 hover:text-white transition flex items-center justify-between">
+                <span class="flex items-center gap-2"><span>➕</span> Add New Account</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-400 font-bold">${this.MAX_ACCOUNTS - this.getAccounts().length} slots left</span>
+              </button>
+
+              <button onclick="BerryPulseAuth.showAccountManagerModal()" class="w-full text-left px-3 py-2 rounded-xl text-berry-200 hover:bg-berry-900/60 hover:text-white transition flex items-center justify-between">
+                <span class="flex items-center gap-2"><span>👥</span> Manage All Accounts & Roles</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">Admin Panel</span>
+              </button>
+
+              <button onclick="BerryPulseAuth.showAccountInfoModal()" class="w-full text-left px-3 py-2 rounded-xl text-berry-100 hover:bg-berry-900/80 hover:text-white transition flex items-center gap-2">
+                <span>👤</span> Account Info
+              </button>
+
+              <button onclick="BerryPulseAuth.logout()" class="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 transition flex items-center gap-2">
+                <span>🔒</span> Sign Out / Lock Session
+              </button>
+            </div>
+          ` : `
+            <!-- NON-ADMIN: Only Account Info and Sign Out (No Switch Accounts) -->
+            <div class="p-3.5 bg-gradient-to-r from-berry-900/90 to-purple-950/90 border-b border-berry-800/60">
               <div class="flex items-center gap-2.5">
                 <span class="text-2xl">${user.avatar || '👤'}</span>
                 <div>
                   <h4 class="text-xs font-extrabold text-white">${user.displayName}</h4>
-                  <p class="text-[10px] text-berry-300/80">@${user.username} • ${user.role.toUpperCase()}</p>
+                  <p class="text-[10px] text-berry-300/80">@${user.username} • MEMBER</p>
                 </div>
               </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                ${this.getAccounts().length}/${this.MAX_ACCOUNTS} Accts
-              </span>
+              <p class="text-[10px] text-berry-300/70 mt-1 italic">${user.bio || 'BerryPulse Wellness'}</p>
             </div>
-            <p class="text-[10px] text-berry-300/70 mt-1 italic">${user.bio || 'BerryPulse Wellness'}</p>
-          </div>
 
-          <!-- Switch Accounts List -->
-          <div class="p-2 border-b border-berry-800/40">
-            <div class="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-berry-300 uppercase tracking-wider">
-              <span>Switch Accounts (${this.getAccounts().length}/${this.MAX_ACCOUNTS})</span>
+            <!-- Non-Admin Actions: ONLY "Account Info" and "Sign Out" -->
+            <div class="p-2 space-y-1 bg-berry-950/60 text-xs font-medium">
+              <button onclick="BerryPulseAuth.showAccountInfoModal()" class="w-full text-left px-3.5 py-2.5 rounded-xl text-berry-100 hover:bg-berry-900/80 hover:text-white transition flex items-center gap-2.5">
+                <span>👤</span> Account Info
+              </button>
+
+              <button onclick="BerryPulseAuth.logout()" class="w-full text-left px-3.5 py-2.5 rounded-xl text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 transition flex items-center gap-2.5">
+                <span>🔒</span> Sign Out
+              </button>
             </div>
-            <div class="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
-              ${this.renderDropdownAccountsList(user.id)}
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="p-2 space-y-1 bg-berry-950/60 text-xs font-medium">
-            <button onclick="BerryPulseAuth.showAddAccountModal()" class="w-full text-left px-3 py-2 rounded-xl text-pink-300 hover:bg-berry-900/60 hover:text-white transition flex items-center justify-between">
-              <span class="flex items-center gap-2"><span>➕</span> Add New Account</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-400 font-bold">${this.MAX_ACCOUNTS - this.getAccounts().length} slots left</span>
-            </button>
-
-            <button onclick="BerryPulseAuth.showAccountManagerModal()" class="w-full text-left px-3 py-2 rounded-xl text-berry-200 hover:bg-berry-900/60 hover:text-white transition flex items-center justify-between">
-              <span class="flex items-center gap-2"><span>👥</span> Manage All Accounts & Roles</span>
-              ${isAdmin ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">Admin Panel</span>' : ''}
-            </button>
-
-            <button onclick="BerryPulseAuth.logout()" class="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 transition flex items-center gap-2">
-              <span>🔒</span> Sign Out / Lock Session
-            </button>
-          </div>
+          `}
         </div>
       </div>
     `;
@@ -888,15 +925,27 @@ const BerryPulseAuth = {
     this.switchAccount(targetId, true);
   },
 
-  // Open Add Account modal or switch to register tab
+  // Open Add Account modal or switch to register tab (admin only while logged in)
   showAddAccountModal: function () {
     this.closeAccountDropdown();
+    if (!this.isAdmin()) {
+      if (window.BerryPulseApp && BerryPulseApp.showToast) {
+        BerryPulseApp.showToast('🔒 Only administrators can add accounts while logged in.');
+      }
+      return;
+    }
     this.showAuthGateModal('register');
   },
 
-  // Show Full Account Management & Access Controls Modal
+  // Show Full Account Management & Access Controls Modal (admin only)
   showAccountManagerModal: function () {
     this.closeAccountDropdown();
+    if (!this.isAdmin()) {
+      if (window.BerryPulseApp && BerryPulseApp.showToast) {
+        BerryPulseApp.showToast('🔒 Access restricted: Only administrators can access the Account Manager.');
+      }
+      return;
+    }
     const modal = document.getElementById('auth-manager-modal');
     if (!modal) return;
 
@@ -908,6 +957,75 @@ const BerryPulseAuth = {
 
   hideAccountManagerModal: function () {
     const modal = document.getElementById('auth-manager-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modal.style.display = 'none';
+    }
+  },
+
+  // Account Info Modal (available for all users, including non-admin members)
+  showAccountInfoModal: function () {
+    this.closeAccountDropdown();
+    const modal = document.getElementById('account-info-modal');
+    if (!modal) return;
+
+    const user = this.getCurrentUser();
+    if (!user) return;
+
+    const avatarEl = document.getElementById('account-info-avatar');
+    const nameEl = document.getElementById('account-info-name');
+    const userEl = document.getElementById('account-info-username');
+    const roleBadgeEl = document.getElementById('account-info-role-badge');
+    const bioEl = document.getElementById('account-info-bio');
+    const createdEl = document.getElementById('account-info-created');
+    const targetsEl = document.getElementById('account-info-targets');
+
+    if (avatarEl) avatarEl.textContent = user.avatar || '👤';
+    if (nameEl) nameEl.textContent = user.displayName;
+    if (userEl) userEl.textContent = `@${user.username}`;
+    if (roleBadgeEl) {
+      roleBadgeEl.innerHTML = user.role === 'admin'
+        ? '<span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">ADMIN 👑</span>'
+        : '<span class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">MEMBER 👤</span>';
+    }
+    if (bioEl) bioEl.textContent = user.bio || 'BerryPulse Wellness Member';
+    if (createdEl) createdEl.textContent = user.createdAt || 'Active';
+
+    if (targetsEl) {
+      let goals = {};
+      if (window.BerryPulseStorage && BerryPulseStorage.state && BerryPulseStorage.state.goals) {
+        goals = BerryPulseStorage.state.goals;
+      } else if (window.BerryPulseData && BerryPulseData.defaultGoals) {
+        goals = BerryPulseData.defaultGoals;
+      }
+      const cal = goals.calories || 2200;
+      const prot = goals.proteinGrams || 140;
+      const water = goals.waterOz || 96;
+
+      targetsEl.innerHTML = `
+        <div class="p-2 rounded-xl bg-berry-950/70 border border-berry-800/50 text-center">
+          <div class="text-[10px] text-berry-400 font-semibold uppercase">Calories</div>
+          <div class="text-xs font-bold text-white mt-0.5">${cal} kcal</div>
+        </div>
+        <div class="p-2 rounded-xl bg-berry-950/70 border border-berry-800/50 text-center">
+          <div class="text-[10px] text-berry-400 font-semibold uppercase">Protein</div>
+          <div class="text-xs font-bold text-white mt-0.5">${prot}g</div>
+        </div>
+        <div class="p-2 rounded-xl bg-berry-950/70 border border-berry-800/50 text-center">
+          <div class="text-[10px] text-berry-400 font-semibold uppercase">Water</div>
+          <div class="text-xs font-bold text-white mt-0.5">${water} oz</div>
+        </div>
+      `;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.style.display = 'flex';
+  },
+
+  hideAccountInfoModal: function () {
+    const modal = document.getElementById('account-info-modal');
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');

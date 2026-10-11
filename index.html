@@ -2272,21 +2272,79 @@
         </div>
     </div>
 
+    <!-- ================= ACCOUNT INFO MODAL (For All Users) ================= -->
+    <div id="account-info-modal" onclick="if(event.target===this) BerryPulseAuth.hideAccountInfoModal()" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md bg-berry-950 border border-pink-500/30 p-6 rounded-3xl shadow-2xl relative text-left">
+            <button onclick="BerryPulseAuth.hideAccountInfoModal()" class="absolute top-4 right-4 text-berry-400 hover:text-white p-2 rounded-xl text-lg hover:bg-berry-900 transition">✕</button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3.5 mb-5 pb-4 border-b border-berry-800/60">
+                <span id="account-info-avatar" class="text-4xl p-2.5 rounded-2xl bg-berry-900/80 border border-berry-700/60 shadow-inner">👤</span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 id="account-info-name" class="text-base font-extrabold text-white"></h3>
+                        <span id="account-info-role-badge"></span>
+                    </div>
+                    <p id="account-info-username" class="text-xs text-berry-300 font-mono mt-0.5"></p>
+                </div>
+            </div>
+
+            <!-- Profile Info Grid -->
+            <div class="space-y-3 mb-5 text-xs">
+                <div class="p-3 rounded-2xl bg-berry-900/50 border border-berry-800/60">
+                    <span class="text-berry-400 block text-[10px] uppercase font-bold tracking-wider mb-1">About / Bio</span>
+                    <p id="account-info-bio" class="text-berry-100 italic"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 rounded-2xl bg-berry-900/50 border border-berry-800/60">
+                        <span class="text-berry-400 block text-[10px] uppercase font-bold tracking-wider mb-1">Member Since</span>
+                        <span id="account-info-created" class="text-white font-semibold"></span>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-berry-900/50 border border-berry-800/60">
+                        <span class="text-berry-400 block text-[10px] uppercase font-bold tracking-wider mb-1">Data Partition</span>
+                        <span class="text-emerald-300 font-semibold flex items-center gap-1"><span>🔒</span> Dedicated</span>
+                    </div>
+                </div>
+
+                <!-- Wellness Targets Summary -->
+                <div class="p-3.5 rounded-2xl bg-berry-900/50 border border-berry-800/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-berry-300 font-bold">Personal Wellness Targets</span>
+                        <button type="button" onclick="BerryPulseAuth.hideAccountInfoModal(); BerryPulseApp.openSettingsModal();" class="text-[11px] text-pink-400 hover:text-pink-300 font-semibold underline">
+                            Edit Targets →
+                        </button>
+                    </div>
+                    <div id="account-info-targets" class="grid grid-cols-3 gap-2 text-center pt-1"></div>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-berry-800/60 flex items-center justify-between">
+                <button type="button" onclick="BerryPulseAuth.hideAccountInfoModal(); BerryPulseAuth.logout();" class="px-4 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 text-xs font-bold transition flex items-center gap-1.5">
+                    <span>🔒</span> Sign Out
+                </button>
+                <button type="button" onclick="BerryPulseAuth.hideAccountInfoModal()" class="px-5 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition shadow-md shadow-pink-600/30">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="js/auth.js?v=2.8.0"></script>
-    <script src="js/data.js?v=2.8.0"></script>
-    <script src="js/storage.js?v=2.8.0"></script>
-    <script src="js/ai-nutrition.js?v=2.8.0"></script>
-    <script src="js/ai-advisor.js?v=2.8.0"></script>
-    <script src="js/nutrition.js?v=2.8.0"></script>
-    <script src="js/habits.js?v=2.8.0"></script>
-    <script src="js/activity.js?v=2.8.0"></script>
-    <script src="js/apple-watch.js?v=2.8.0"></script>
-    <script src="js/water.js?v=2.8.0"></script>
-    <script src="js/sleep.js?v=2.8.0"></script>
-    <script src="js/mindfulness.js?v=2.8.0"></script>
-    <script src="js/charts.js?v=2.8.0"></script>
-    <script src="js/app.js?v=2.8.0"></script>
+    <script src="js/auth.js?v=2.9.0"></script>
+    <script src="js/data.js?v=2.9.0"></script>
+    <script src="js/storage.js?v=2.9.0"></script>
+    <script src="js/ai-nutrition.js?v=2.9.0"></script>
+    <script src="js/ai-advisor.js?v=2.9.0"></script>
+    <script src="js/nutrition.js?v=2.9.0"></script>
+    <script src="js/habits.js?v=2.9.0"></script>
+    <script src="js/activity.js?v=2.9.0"></script>
+    <script src="js/apple-watch.js?v=2.9.0"></script>
+    <script src="js/water.js?v=2.9.0"></script>
+    <script src="js/sleep.js?v=2.9.0"></script>
+    <script src="js/mindfulness.js?v=2.9.0"></script>
+    <script src="js/charts.js?v=2.9.0"></script>
+    <script src="js/app.js?v=2.9.0"></script>
 </body>
 
 </html>
