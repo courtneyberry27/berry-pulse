@@ -282,6 +282,9 @@ const BerryPulseAuth = {
     }
 
     const entered = (pin || '').trim();
+    if (!entered) {
+      throw new Error('Please enter your password.');
+    }
     // For all users, password is 'test' for right now
     if (entered !== 'test' && entered !== account.pin) {
       throw new Error('Incorrect password. Please try again.');
@@ -317,9 +320,9 @@ const BerryPulseAuth = {
     const pinInp = document.getElementById('auth-login-pin');
     const errEl = document.getElementById('auth-login-error');
     if (userInp) userInp.value = username;
-    if (pinInp) pinInp.value = 'test';
+    if (pinInp) pinInp.value = '';
     if (errEl) errEl.classList.add('hidden');
-    if (userInp) userInp.focus();
+    if (pinInp) pinInp.focus();
   },
 
   // Direct switch to an account (prompts PIN if required)
@@ -377,9 +380,10 @@ const BerryPulseAuth = {
 
     try {
       const u = userInp.value.trim();
-      const p = (pinInp && pinInp.value.trim()) ? pinInp.value.trim() : 'test';
+      const p = pinInp ? pinInp.value.trim() : '';
       const rem = rememberInp ? rememberInp.checked : true;
       if (!u) throw new Error('Please enter your username (e.g. courtney, alex, jordan).');
+      if (!p) throw new Error('Please enter your password.');
       this.login(u, p, rem);
       if (errEl) errEl.classList.add('hidden');
     } catch (err) {
@@ -403,7 +407,7 @@ const BerryPulseAuth = {
     try {
       const name = nameInp ? nameInp.value.trim() : '';
       const username = userInp ? userInp.value.trim() : '';
-      const pin = (pinInp && pinInp.value.trim()) ? pinInp.value.trim() : 'test';
+      const pin = pinInp ? pinInp.value.trim() : '';
       const role = roleInp ? roleInp.value : 'member';
       const avatar = avatarInp ? avatarInp.value : '🫐';
       const cal = calInp ? parseInt(calInp.value, 10) : 2100;
@@ -411,6 +415,7 @@ const BerryPulseAuth = {
 
       if (!name) throw new Error('Please provide your name.');
       if (!username) throw new Error('Please choose a username.');
+      if (!pin) throw new Error('Please enter a password for your account.');
 
       const newAccount = this.createAccount({
         displayName: name,
@@ -474,7 +479,7 @@ const BerryPulseAuth = {
                 <span class="text-sm font-bold text-white group-hover:text-pink-300 transition">${acc.displayName}</span>
                 ${isAdmin ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">ADMIN</span>' : '<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">MEMBER</span>'}
               </div>
-              <p class="text-xs text-berry-300/80 mt-0.5">@${acc.username} • Password: <code class="text-pink-300 font-bold">test</code></p>
+              <p class="text-xs text-berry-300/80 mt-0.5">@${acc.username}</p>
             </div>
           </div>
           <button type="button" class="px-3 py-1.5 rounded-xl bg-pink-600/30 group-hover:bg-pink-600 text-pink-300 group-hover:text-white text-xs font-bold transition">
@@ -516,9 +521,12 @@ const BerryPulseAuth = {
       throw new Error(`Username "${username}" is already taken.`);
     }
 
-    const pin = (userData.pin || 'test').trim() || 'test';
+    const pin = (userData.pin || '').trim();
+    if (!pin) {
+      throw new Error('Please enter a password.');
+    }
     if (pin.length < 4) {
-      throw new Error('PIN / Password must be at least 4 digits/characters.');
+      throw new Error('Password must be at least 4 characters.');
     }
 
     // Role check: Only existing admins can assign admin role; default to member
@@ -863,7 +871,14 @@ const BerryPulseAuth = {
     const account = this.getAccountById(targetId);
     if (!account) return;
 
-    if (pin.trim() !== 'test' && account.pin && account.pin !== pin.trim()) {
+    const trimmedPin = (pin || '').trim();
+    if (!trimmedPin) {
+      errorEl.textContent = 'Please enter your password.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    if (trimmedPin !== 'test' && account.pin && account.pin !== trimmedPin) {
       errorEl.textContent = 'Incorrect password. Please try again.';
       errorEl.classList.remove('hidden');
       return;
