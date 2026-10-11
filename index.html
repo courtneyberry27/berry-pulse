@@ -121,6 +121,9 @@
         <button onclick="document.getElementById('data-modal').classList.remove('hidden'); document.getElementById('data-modal').classList.add('flex');" class="p-2 rounded-xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/40 text-berry-300 hover:text-white transition" title="Storage & Backup">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
         </button>
+
+        <!-- User Profile Chip & Account Switcher Dropdown -->
+        <div id="header-user-chip-container" class="relative"></div>
       </div>
 
     </div>
@@ -168,7 +171,7 @@
               <span class="text-xs font-bold uppercase tracking-wider text-pink-400 bg-pink-500/10 px-2.5 py-1 rounded-full border border-pink-500/20">Daily Vitality</span>
               <span class="text-xs text-amber-300 font-semibold flex items-center gap-1">🔥 7-Day Consistency Streak!</span>
             </div>
-            <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-1.5">Welcome back to BerryPulse</h2>
+            <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-1.5"><span id="overview-user-greeting">Welcome back to BerryPulse</span></h2>
             <p class="text-sm text-berry-200/80 mt-1">Track your nourishment, movement, hydration, sleep, and serene moments in one place.</p>
           </div>
 
@@ -1858,19 +1861,262 @@
     </div>
   </div>
 
+  <!-- ================= AUTH GATE / SIGN IN MODAL ================= -->
+  <div id="auth-gate-modal" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-berry-950 border border-pink-500/40 rounded-3xl max-w-xl w-full p-6 shadow-2xl shadow-pink-950/60 overflow-y-auto max-h-[92vh] relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Close button (available when an active session exists) -->
+      <button onclick="BerryPulseAuth.hideAuthGateModal()" class="absolute top-4 right-4 text-berry-400 hover:text-white p-2 rounded-xl text-lg hover:bg-berry-900 transition">✕</button>
+
+      <!-- Portal Header -->
+      <div class="flex items-center gap-3.5 mb-5">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-600/40 pulse-glow">
+          <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-black bg-gradient-to-r from-pink-400 via-rose-300 to-purple-400 bg-clip-text text-transparent">BerryPulse Access Portal</h2>
+            <span id="auth-accounts-count-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">3 / 10 Accounts Active</span>
+          </div>
+          <p class="text-xs text-berry-300/80">Isolated wellness data partitions & access controls (Up to 10 Accounts)</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Sign In, Quick Switch, Register) -->
+      <div class="flex gap-2 p-1 bg-berry-900/60 rounded-2xl border border-berry-700/50 mb-5">
+        <button id="auth-tab-btn-signin" type="button" onclick="BerryPulseAuth.switchAuthTab('signin')" class="flex-1 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-md transition">
+          🔑 Sign In
+        </button>
+        <button id="auth-tab-btn-quickswitch" type="button" onclick="BerryPulseAuth.switchAuthTab('quickswitch')" class="flex-1 py-2 rounded-xl text-xs font-semibold bg-berry-900/60 text-berry-300 hover:text-white transition">
+          👥 Switch Profiles
+        </button>
+        <button id="auth-tab-btn-register" type="button" onclick="BerryPulseAuth.switchAuthTab('register')" class="flex-1 py-2 rounded-xl text-xs font-semibold bg-berry-900/60 text-berry-300 hover:text-white transition">
+          ➕ New Account
+        </button>
+      </div>
+
+      <!-- Tab 1: Sign In -->
+      <div id="auth-tab-pane-signin" class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-berry-200 block mb-1">Username</label>
+          <input type="text" id="auth-signin-username" placeholder="e.g. courtney, alex, jordan" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500" />
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-berry-200 block mb-1">PIN / Password</label>
+          <input type="password" id="auth-signin-pin" placeholder="Enter PIN (Demo default: 1234)" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-berry-400 focus:outline-none focus:border-pink-500" />
+        </div>
+
+        <div id="auth-signin-error" class="hidden text-xs text-rose-300 bg-rose-950/60 p-2.5 rounded-xl border border-rose-500/30"></div>
+
+        <button type="button" onclick="try { const u=document.getElementById('auth-signin-username').value; const p=document.getElementById('auth-signin-pin').value; BerryPulseAuth.login(u,p); } catch(err) { const el=document.getElementById('auth-signin-error'); el.textContent=err.message; el.classList.remove('hidden'); }" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-pink-600/30 transition">
+          Sign In to BerryPulse
+        </button>
+
+        <!-- One-Click Demo Accounts -->
+        <div class="pt-3 border-t border-berry-800/60">
+          <p class="text-[11px] font-semibold text-berry-300/80 mb-2">⚡ Quick 1-Click Demo Logins (PIN: 1234):</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="BerryPulseAuth.login('courtney', '1234')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
+              <span class="text-lg">👑</span>
+              <div class="text-[11px] font-bold text-white group-hover:text-pink-300">Courtney</div>
+              <div class="text-[9px] text-purple-400 font-semibold">Admin</div>
+            </button>
+            <button type="button" onclick="BerryPulseAuth.login('alex', '1234')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
+              <span class="text-lg">🏃</span>
+              <div class="text-[11px] font-bold text-white group-hover:text-pink-300">Alex</div>
+              <div class="text-[9px] text-emerald-400 font-semibold">Member</div>
+            </button>
+            <button type="button" onclick="BerryPulseAuth.login('jordan', '1234')" class="p-2 rounded-xl bg-berry-900/80 hover:bg-berry-800 border border-berry-700/60 text-left transition group">
+              <span class="text-lg">🧘</span>
+              <div class="text-[11px] font-bold text-white group-hover:text-pink-300">Jordan</div>
+              <div class="text-[9px] text-emerald-400 font-semibold">Member</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Switch Profiles Grid -->
+      <div id="auth-tab-pane-quickswitch" class="hidden space-y-3">
+        <p class="text-xs text-berry-300/80 mb-2">Select a profile to switch into their isolated wellness data:</p>
+        <div id="auth-gate-accounts-grid" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar"></div>
+      </div>
+
+      <!-- Tab 3: Create New Account (Up to 10) -->
+      <div id="auth-tab-pane-register" class="hidden space-y-3.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-berry-200 block mb-1">Display Name</label>
+            <input type="text" id="auth-reg-name" placeholder="e.g. Taylor Swift" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-berry-200 block mb-1">Username (login ID)</label>
+            <input type="text" id="auth-reg-username" placeholder="e.g. taylor" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-berry-200 block mb-1">PIN / Password (4+ digits)</label>
+            <input type="password" id="auth-reg-pin" placeholder="e.g. 5678" value="1234" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-berry-200 block mb-1">Role & Access Level</label>
+            <select id="auth-reg-role" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500">
+              <option value="member" selected>👤 Member (Personal Data Partition)</option>
+              <option value="admin">👑 Administrator (Full Access & User Admin)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Avatar Selection -->
+        <div>
+          <label class="text-xs font-bold text-berry-200 block mb-1.5">Profile Avatar Emoji</label>
+          <div class="flex flex-wrap gap-2" id="auth-reg-avatar-picker">
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🫐" checked class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🫐</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🏃" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🏃</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🧘" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🧘</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🥑" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🥑</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🏋️" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🏋️</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🥗" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🥗</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🚴" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🚴</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="🏊" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">🏊</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="👑" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">👑</span></label>
+            <label class="cursor-pointer"><input type="radio" name="auth-avatar" value="⭐" class="hidden peer"><span class="w-9 h-9 rounded-xl bg-berry-900 border border-berry-700/60 peer-checked:border-pink-500 peer-checked:bg-pink-600/30 flex items-center justify-center text-lg transition">⭐</span></label>
+          </div>
+        </div>
+
+        <!-- Initial Targets -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-berry-200 block mb-1">Starting Calorie Goal</label>
+            <input type="number" id="auth-reg-calories" value="2100" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-berry-200 block mb-1">Starting Protein (g)</label>
+            <input type="number" id="auth-reg-protein" value="135" class="w-full bg-berry-900/80 border border-berry-700/60 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" />
+          </div>
+        </div>
+
+        <div id="auth-reg-error" class="hidden text-xs text-rose-300 bg-rose-950/60 p-2.5 rounded-xl border border-rose-500/30"></div>
+
+        <button type="button" onclick="try {
+          const name = document.getElementById('auth-reg-name').value;
+          const username = document.getElementById('auth-reg-username').value;
+          const pin = document.getElementById('auth-reg-pin').value;
+          const role = document.getElementById('auth-reg-role').value;
+          const avatar = (document.querySelector('input[name=auth-avatar]:checked') || {}).value || '🫐';
+          const cal = parseInt(document.getElementById('auth-reg-calories').value, 10);
+          const p = parseInt(document.getElementById('auth-reg-protein').value, 10);
+          BerryPulseAuth.createAccount({ displayName: name, username: username, pin: pin, role: role, avatar: avatar, startingGoalCalories: cal, startingProteinGrams: p });
+          document.getElementById('auth-reg-error').classList.add('hidden');
+        } catch(err) {
+          const el = document.getElementById('auth-reg-error');
+          el.textContent = err.message;
+          el.classList.remove('hidden');
+        }" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-pink-600/30 transition">
+          Create Account & Sign In
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= PIN VERIFICATION MODAL ================= -->
+  <div id="auth-pin-modal" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-berry-950 border border-berry-700/60 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center relative animate-in fade-in zoom-in-95 duration-150">
+      <button onclick="BerryPulseAuth.closePinPromptModal()" class="absolute top-4 right-4 text-berry-400 hover:text-white p-1 text-lg">✕</button>
+
+      <div class="w-16 h-16 rounded-2xl bg-berry-900/80 border border-pink-500/30 flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg">
+        <span id="auth-pin-target-avatar">👤</span>
+      </div>
+
+      <h3 id="auth-pin-target-name" class="text-base font-extrabold text-white"></h3>
+      <p id="auth-pin-target-username" class="text-xs text-berry-300 mb-4"></p>
+      <input type="hidden" id="auth-pin-target-id" />
+
+      <p class="text-xs text-berry-200 mb-2">Enter account PIN / password (Demo PIN: 1234):</p>
+      <input type="password" id="auth-pin-input" maxlength="8" class="text-center text-xl font-bold tracking-widest bg-berry-900 border border-berry-700 rounded-xl px-4 py-2.5 w-44 text-white focus:outline-none focus:border-pink-500 mb-3" onkeydown="if(event.key==='Enter') BerryPulseAuth.submitPinPrompt()" />
+
+      <p id="auth-pin-error" class="hidden text-xs text-rose-400 mb-3"></p>
+
+      <div class="flex gap-2">
+        <button type="button" onclick="BerryPulseAuth.closePinPromptModal()" class="flex-1 py-2 rounded-xl bg-berry-900 hover:bg-berry-800 text-berry-300 text-xs font-semibold transition">
+          Cancel
+        </button>
+        <button type="button" onclick="BerryPulseAuth.submitPinPrompt()" class="flex-1 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition shadow-md shadow-pink-600/30">
+          Verify & Switch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ACCOUNT MANAGEMENT & ACCESS CONTROLS MODAL ================= -->
+  <div id="auth-manager-modal" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-berry-950 border border-berry-700/60 rounded-3xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[92vh] relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <button onclick="BerryPulseAuth.hideAccountManagerModal()" class="absolute top-4 right-4 text-berry-400 hover:text-white p-2 rounded-xl text-lg hover:bg-berry-900 transition">✕</button>
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-2xl bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-xl">
+          👥
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-white">Accounts & Access Control Manager</h3>
+          <p class="text-xs text-berry-300">Multi-tenant user profiles with isolated data partitions (Max 10 accounts)</p>
+        </div>
+      </div>
+
+      <!-- Capacity Progress Bar -->
+      <div id="auth-manager-slot-indicator" class="mb-5 p-3 rounded-2xl bg-berry-900/40 border border-berry-800/40"></div>
+
+      <!-- RBAC Notice -->
+      <div class="p-3 rounded-2xl bg-berry-900/40 border border-berry-800/60 mb-4 text-xs text-berry-200/90 leading-relaxed flex items-start gap-2.5">
+        <span class="text-base leading-none">🛡️</span>
+        <div>
+          <span class="font-bold text-white block mb-0.5">Role-Based Access Control (RBAC)</span>
+          <span><strong>Administrators (👑)</strong> can create, manage, reset PINs, and delete accounts. <strong>Members (👤)</strong> enjoy dedicated personal data partitions for nutrition, water, habits, and workouts with full privacy.</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-3">
+        <h4 id="auth-manager-count-header" class="text-xs font-bold text-berry-200">Active Accounts</h4>
+        <button onclick="BerryPulseAuth.hideAccountManagerModal(); BerryPulseAuth.showAddAccountModal();" class="text-xs px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold transition flex items-center gap-1.5 shadow-sm">
+          <span>➕ Add Account</span>
+        </button>
+      </div>
+
+      <!-- Accounts List Container -->
+      <div id="auth-manager-list-container" class="space-y-3 mb-5 max-h-80 overflow-y-auto custom-scrollbar"></div>
+
+      <div class="pt-3 border-t border-berry-800/60 flex justify-end">
+        <button onclick="BerryPulseAuth.hideAccountManagerModal()" class="px-5 py-2 rounded-xl bg-berry-800 hover:bg-berry-700 text-white text-xs font-semibold transition">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="js/data.js?v=2.1.0"></script>
-  <script src="js/storage.js?v=2.1.0"></script>
-  <script src="js/ai-nutrition.js?v=2.1.0"></script>
-  <script src="js/ai-advisor.js?v=2.1.0"></script>
-  <script src="js/nutrition.js?v=2.1.0"></script>
-  <script src="js/habits.js?v=2.1.0"></script>
-  <script src="js/activity.js?v=2.1.0"></script>
-  <script src="js/apple-watch.js?v=2.1.0"></script>
-  <script src="js/water.js?v=2.1.0"></script>
-  <script src="js/sleep.js?v=2.1.0"></script>
-  <script src="js/mindfulness.js?v=2.1.0"></script>
-  <script src="js/charts.js?v=2.1.0"></script>
-  <script src="js/app.js?v=2.1.0"></script>
+  <script src="js/auth.js?v=2.2.0"></script>
+  <script src="js/data.js?v=2.2.0"></script>
+  <script src="js/storage.js?v=2.2.0"></script>
+  <script src="js/ai-nutrition.js?v=2.2.0"></script>
+  <script src="js/ai-advisor.js?v=2.2.0"></script>
+  <script src="js/nutrition.js?v=2.2.0"></script>
+  <script src="js/habits.js?v=2.2.0"></script>
+  <script src="js/activity.js?v=2.2.0"></script>
+  <script src="js/apple-watch.js?v=2.2.0"></script>
+  <script src="js/water.js?v=2.2.0"></script>
+  <script src="js/sleep.js?v=2.2.0"></script>
+  <script src="js/mindfulness.js?v=2.2.0"></script>
+  <script src="js/charts.js?v=2.2.0"></script>
+  <script src="js/app.js?v=2.2.0"></script>
 </body>
 </html>

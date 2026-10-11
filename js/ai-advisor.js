@@ -31,9 +31,15 @@ const BerryPulseAIAdvisor = {
     window.addEventListener('berrypulse:open-ai-advisor', () => this.openModal());
   },
 
+  getProfileKey: function () {
+    const userId = (window.BerryPulseAuth && BerryPulseAuth.getCurrentUserId()) || 'usr_courtney';
+    return `${this.STORAGE_KEY_PROFILE}_${userId}`;
+  },
+
   getProfile: function () {
     try {
-      const saved = localStorage.getItem(this.STORAGE_KEY_PROFILE);
+      const key = this.getProfileKey();
+      const saved = localStorage.getItem(key) || localStorage.getItem(this.STORAGE_KEY_PROFILE);
       if (saved) {
         return Object.assign({}, this.defaultProfile, JSON.parse(saved));
       }
@@ -45,7 +51,8 @@ const BerryPulseAIAdvisor = {
 
   saveProfile: function (profile) {
     try {
-      localStorage.setItem(this.STORAGE_KEY_PROFILE, JSON.stringify(profile));
+      const key = this.getProfileKey();
+      localStorage.setItem(key, JSON.stringify(profile));
       if (!window.BerryPulseStorage || !BerryPulseStorage.state) {
         if (window.BerryPulseStorage && BerryPulseStorage.init) BerryPulseStorage.init();
       }

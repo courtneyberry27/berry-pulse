@@ -64,6 +64,17 @@
 - **Data Export & Import**: Backup your data to a clean JSON file or restore from a previous backup.
 - **Sample Demo Data**: Preloaded with 7 full days of realistic wellness history for immediate exploration.
 
+### 9. 🔐 Multi-User Authentication & Access Controls (10 Accounts)
+- **10 Account Capacity**: Allows up to 10 user accounts with strict capacity enforcement and a visual slot progress indicator.
+- **Data Partition Isolation**: Each user has a completely isolated data partition in `localStorage`. Logged-in users only see their own meals, calories, workouts, water logs, sleep stages, habits, and AI targets.
+- **Role-Based Access Control (RBAC)**:
+  - **👑 Administrator** (`admin`): Full access to wellness tracking plus exclusive access to the **Account & Access Control Manager** to add new accounts, change user roles, reset PINs/passwords, delete accounts, and view capacity.
+  - **👤 Member** (`member`): Private access to personal wellness data. Protected against unauthorized access or account deletion by non-admins.
+- **Authentication & Lock Screen**:
+  - Secure PIN/password authentication with "Remember Me" session persistence.
+  - Quick Profile Switcher with 1-click demo logins (`Courtney [Admin]`, `Alex [Member]`, `Jordan [Member]`, PIN: `1234`).
+  - Interactive header profile chip showing current user avatar, name, and role badge with quick account dropdown.
+
 ---
 
 ## 🚀 Quick Start Guide

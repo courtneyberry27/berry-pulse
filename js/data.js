@@ -149,7 +149,7 @@ const BerryPulseData = {
   },
 
   // Generates 7 days of realistic history data including today
-  generateInitialData: function() {
+  generateInitialData: function(customOptions = {}) {
     const today = new Date();
     const history = {};
 
@@ -274,16 +274,24 @@ const BerryPulseData = {
       };
     }
 
+    const profileName = (customOptions && customOptions.name) || (customOptions && customOptions.userProfile && customOptions.userProfile.name) || 'Courtney';
+    const activeGoals = Object.assign({}, BerryPulseData.defaultGoals, (customOptions && customOptions.goals) || {});
+    const activeProfile = Object.assign({
+      name: profileName,
+      streakDays: (customOptions && customOptions.streakDays) || 7,
+      weightKg: (customOptions && customOptions.weightKg) || 68,
+      heightCm: (customOptions && customOptions.heightCm) || 172
+    }, (customOptions && customOptions.userProfile) || {});
+
+    const activeHabits = (customOptions && customOptions.habits) 
+      ? customOptions.habits.map(h => ({ ...h }))
+      : BerryPulseData.defaultHabits.map(h => ({ ...h }));
+
     return {
       version: 1,
-      userProfile: {
-        name: 'Courtney',
-        streakDays: 7,
-        weightKg: 68,
-        heightCm: 172
-      },
-      goals: { ...BerryPulseData.defaultGoals },
-      habits: BerryPulseData.defaultHabits.map(h => ({ ...h })),
+      userProfile: activeProfile,
+      goals: activeGoals,
+      habits: activeHabits,
       history: history
     };
   }

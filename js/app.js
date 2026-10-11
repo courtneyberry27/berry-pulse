@@ -15,7 +15,16 @@ const BerryPulseApp = {
       console.error('BerryPulseApp: Failed to bind global events:', e);
     }
 
-    // 2. Initialize Storage
+    // 2. Initialize Authentication & Access Controls
+    try {
+      if (window.BerryPulseAuth && BerryPulseAuth.init) {
+        BerryPulseAuth.init();
+      }
+    } catch (e) {
+      console.error('BerryPulseApp: Failed to initialize auth:', e);
+    }
+
+    // 3. Initialize Storage
     try {
       if (window.BerryPulseStorage && BerryPulseStorage.init) {
         BerryPulseStorage.init();
@@ -102,8 +111,20 @@ const BerryPulseApp = {
         if (e.target === modal) {
           modal.classList.add('hidden');
           modal.classList.remove('flex');
+          modal.style.display = 'none';
         }
       });
+    });
+
+    // Dismiss user account dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('user-account-dropdown');
+      const chipBtn = document.getElementById('btn-user-chip');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!dropdown.contains(e.target) && (!chipBtn || !chipBtn.contains(e.target))) {
+          dropdown.classList.add('hidden');
+        }
+      }
     });
   },
 
@@ -194,6 +215,14 @@ const BerryPulseApp = {
 
     if (pickerInput) {
       pickerInput.value = activeKey;
+    }
+
+    const greetingEl = document.getElementById('overview-user-greeting');
+    if (greetingEl && window.BerryPulseAuth) {
+      const u = BerryPulseAuth.getCurrentUser();
+      if (u) {
+        greetingEl.textContent = `Welcome back, ${u.displayName}! ${u.avatar || '✨'}`;
+      }
     }
   },
 

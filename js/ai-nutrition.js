@@ -93,18 +93,18 @@ const BerryPulseAI = {
     'smoothie': { cal: 260, p: 12.0, c: 45.0, f: 3.5, fib: 6.0, defaultUnit: 'tall glass (400ml)', icon: '🥤', name: 'Smoothie' }
   },
 
-  init: function() {
+  init: function () {
     const input = document.getElementById('input-gemini-api-key');
     if (input) {
       input.value = this.getApiKey();
     }
   },
 
-  getApiKey: function() {
+  getApiKey: function () {
     return localStorage.getItem(this.STORAGE_KEY_API_KEY) || '';
   },
 
-  setApiKey: function(key) {
+  setApiKey: function (key) {
     if (key) {
       localStorage.setItem(this.STORAGE_KEY_API_KEY, key.trim());
     } else {
@@ -115,7 +115,7 @@ const BerryPulseAI = {
   },
 
   // Main entry point for analyzing ANY food query with AI
-  analyzeFoodQuery: async function(query) {
+  analyzeFoodQuery: async function (query) {
     const trimmed = query.trim();
     if (!trimmed) {
       throw new Error('Please enter a food description or meal to analyze.');
@@ -142,7 +142,7 @@ const BerryPulseAI = {
   },
 
   // Call Google Gemini API (gemini-2.5-flash / gemini-3.8-flash)
-  callGeminiAPI: async function(foodPrompt, apiKey) {
+  callGeminiAPI: async function (foodPrompt, apiKey) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const systemInstruction = `You are BerryPulse's Chief Nutritional Scientist & AI Food Intelligence model.
@@ -211,9 +211,9 @@ Schema:
   },
 
   // Built-in Smart Neural AI Nutrition Engine (Heuristic NLP semantic parsing)
-  analyzeWithBuiltInNeuralAI: function(query) {
+  analyzeWithBuiltInNeuralAI: function (query) {
     const raw = query.toLowerCase();
-    
+
     // Check for number/multiplier prefixes like "2 eggs", "3 slices bacon", "half avocado"
     const numberWords = {
       'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
@@ -338,8 +338,6 @@ Schema:
     };
   }
 };
-
-window.BerryPulseAI = BerryPulseAI;
 
 if (typeof module !== 'undefined') {
   module.exports = BerryPulseAI;
