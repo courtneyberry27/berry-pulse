@@ -199,7 +199,7 @@ const BerryPulseData = {
           tags: ['Cool Room (67°F)', 'No Caffeine after 2pm', 'Dark Mask']
         },
         activity: {
-          appleWatchSynced: true,
+          appleWatchSynced: false,
           appleWatchModel: 'Apple Watch Ultra 2 (Cellular)',
           lastSyncedAt: isToday ? '11:42 AM' : '11:30 PM',
           rings: {

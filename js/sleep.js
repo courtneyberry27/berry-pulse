@@ -96,7 +96,7 @@ const BerryPulseSleep = {
         durationHours: 8.0,
         quality: 'Good & Refreshing',
         qualityRating: 4,
-        source: 'Apple Watch Ultra 2',
+        source: (window.BerryPulseAppleWatch && BerryPulseAppleWatch.getIsConnected()) ? 'Apple Watch Ultra 2' : 'Manual Entry',
         lastSyncedAt: '07:22 AM',
         restingHeartRate: 52,
         respiratoryRate: 14.5,
@@ -258,11 +258,47 @@ const BerryPulseSleep = {
       });
       tagsContainer.innerHTML = html;
     }
+
+    // Render Apple Watch Sleep sensor stream connection status
+    const isWatchConnected = window.BerryPulseAppleWatch && BerryPulseAppleWatch.getIsConnected();
+    const sleepWatchStatus = document.getElementById('sleep-watch-sensor-status');
+    const btnSyncSleepWatch = document.getElementById('btn-sync-sleep-watch');
+
+    if (sleepWatchStatus) {
+      if (isWatchConnected) {
+        sleepWatchStatus.className = 'text-xs text-emerald-400 font-semibold flex items-center gap-1.5';
+        sleepWatchStatus.innerHTML = '<span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span> Paired & Monitoring Sleep Architecture';
+      } else {
+        sleepWatchStatus.className = 'text-xs text-slate-400 font-medium flex items-center gap-1.5';
+        sleepWatchStatus.innerHTML = '<span class="h-2 w-2 rounded-full bg-slate-500 inline-block"></span> Disconnected • Connect watch to stream live sleep stages';
+      }
+    }
+
+    if (btnSyncSleepWatch) {
+      if (isWatchConnected) {
+        btnSyncSleepWatch.innerHTML = '<span>🔄 Sync Sleep from Apple Watch Now</span>';
+      } else {
+        btnSyncSleepWatch.innerHTML = '<span>⌚ Connect Apple Watch to Sync Sleep</span>';
+      }
+    }
   },
 
   // 1. APPLE WATCH SLEEP SYNC (Simulated Live Sync)
   syncAppleWatchSleep: function () {
     if (this.isSyncingWatch) return;
+
+    if (!window.BerryPulseAppleWatch || !BerryPulseAppleWatch.getIsConnected()) {
+      if (window.BerryPulseAppleWatch) {
+        BerryPulseAppleWatch.connectWatch();
+        setTimeout(() => {
+          if (BerryPulseAppleWatch.getIsConnected()) {
+            this.syncAppleWatchSleep();
+          }
+        }, 2300);
+      }
+      return;
+    }
+
     this.isSyncingWatch = true;
 
     const btn = document.getElementById('btn-sync-sleep-watch');
