@@ -52,7 +52,12 @@ const BerryPulseAuth = {
   init: function () {
     this.ensureAccountsStorage();
     this.restoreSession();
-    this.renderHeaderUserChip();
+
+    if (this.isLoggedIn()) {
+      this.unlockApp();
+    } else {
+      this.lockApp();
+    }
   },
 
   // Ensure accounts array exists in localStorage
@@ -100,10 +105,10 @@ const BerryPulseAuth = {
     return accounts.find(a => a.username.toLowerCase() === clean) || null;
   },
 
-  // Session handling
+  // Session handling (strictly gated: does NOT auto-login so landing page is shown first)
   restoreSession: function () {
     try {
-      const saved = localStorage.getItem(this.STORAGE_KEY_SESSION);
+      const saved = localStorage.getItem(this.STORAGE_KEY_SESSION) || sessionStorage.getItem(this.STORAGE_KEY_SESSION);
       if (saved) {
         const session = JSON.parse(saved);
         const account = this.getAccountById(session.userId);
@@ -121,27 +126,57 @@ const BerryPulseAuth = {
       console.warn('BerryPulseAuth: error restoring session', e);
     }
 
-    // Default to first admin account (Courtney) if no prior session exists
-    const accounts = this.getAccounts();
-    const defaultUser = accounts.find(a => a.role === 'admin') || accounts[0];
-    if (defaultUser) {
-      this.currentSession = {
-        userId: defaultUser.id,
-        loginTime: Date.now(),
-        rememberMe: true
-      };
-      this.saveSession();
-    }
+    // Require landing Sign Up / Log In screen when landing on URL without active session
+    this.currentSession = null;
   },
 
   saveSession: function () {
     try {
       if (this.currentSession) {
-        localStorage.setItem(this.STORAGE_KEY_SESSION, JSON.stringify(this.currentSession));
+        if (this.currentSession.rememberMe) {
+          localStorage.setItem(this.STORAGE_KEY_SESSION, JSON.stringify(this.currentSession));
+          sessionStorage.removeItem(this.STORAGE_KEY_SESSION);
+        } else {
+          sessionStorage.setItem(this.STORAGE_KEY_SESSION, JSON.stringify(this.currentSession));
+          localStorage.removeItem(this.STORAGE_KEY_SESSION);
+        }
       } else {
         localStorage.removeItem(this.STORAGE_KEY_SESSION);
+        sessionStorage.removeItem(this.STORAGE_KEY_SESSION);
       }
     } catch (e) { }
+  },
+
+  lockApp: function () {
+    const landing = document.getElementById('auth-landing-page');
+    const shell = document.getElementById('app-shell');
+    if (shell) {
+      shell.classList.add('hidden');
+      shell.style.display = 'none';
+    }
+    if (landing) {
+      landing.classList.remove('hidden');
+      landing.style.display = 'flex';
+    }
+    this.renderLandingCapacityBadge();
+    this.renderLandingProfilesGrid();
+  },
+
+  unlockApp: function () {
+    const landing = document.getElementById('auth-landing-page');
+    const shell = document.getElementById('app-shell');
+    if (landing) {
+      landing.classList.add('hidden');
+      landing.style.display = 'none';
+    }
+    if (shell) {
+      shell.classList.remove('hidden');
+      shell.style.display = 'block';
+    }
+    this.renderHeaderUserChip();
+    if (window.BerryPulseApp && typeof BerryPulseApp.updateHeaderDateDisplay === 'function') {
+      BerryPulseApp.updateHeaderDateDisplay();
+    }
   },
 
   touchUserActive: function (userId) {
@@ -223,6 +258,7 @@ const BerryPulseAuth = {
       BerryPulseStorage.switchUser(account.id);
     }
 
+    this.unlockApp();
     this.renderHeaderUserChip();
     this.hideAuthGateModal();
 
@@ -251,8 +287,10 @@ const BerryPulseAuth = {
         BerryPulseStorage.switchUser(target.id);
       }
 
+      this.unlockApp();
       this.renderHeaderUserChip();
       this.closeAccountDropdown();
+      this.hideAuthGateModal();
 
       if (window.BerryPulseApp && BerryPulseApp.showToast) {
         BerryPulseApp.showToast(`Switched account to ${target.displayName} (${target.role}) ✨`);
@@ -268,10 +306,147 @@ const BerryPulseAuth = {
     this.saveSession();
     this.renderHeaderUserChip();
     this.closeAccountDropdown();
-    this.showAuthGateModal();
+    this.hideAuthGateModal();
+    this.lockApp();
 
     if (window.BerryPulseApp && BerryPulseApp.showToast) {
-      BerryPulseApp.showToast('🔒 Session locked. Please sign in to access BerryPulse.');
+      BerryPulseApp.showToast('🔒 Signed out. Welcome back anytime!');
+    }
+  },
+
+  // Full-Page Landing View Handlers (when user gets to URL)
+  handleLandingLogin: function () {
+    const userInp = document.getElementById('auth-login-user');
+    const pinInp = document.getElementById('auth-login-pin');
+    const rememberInp = document.getElementById('auth-login-remember');
+    const errEl = document.getElementById('auth-login-error');
+    if (!userInp || !pinInp) return;
+
+    try {
+      const u = userInp.value.trim();
+      const p = pinInp.value.trim();
+      const rem = rememberInp ? rememberInp.checked : true;
+      if (!u) throw new Error('Please enter your username.');
+      if (!p) throw new Error('Please enter your PIN or password.');
+      this.login(u, p, rem);
+      if (errEl) errEl.classList.add('hidden');
+    } catch (err) {
+      if (errEl) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+  },
+
+  handleLandingSignup: function () {
+    const nameInp = document.getElementById('auth-signup-name');
+    const userInp = document.getElementById('auth-signup-user');
+    const pinInp = document.getElementById('auth-signup-pin');
+    const roleInp = document.getElementById('auth-signup-role');
+    const avatarInp = document.querySelector('input[name="auth-landing-avatar"]:checked');
+    const calInp = document.getElementById('auth-signup-calories');
+    const protInp = document.getElementById('auth-signup-protein');
+    const errEl = document.getElementById('auth-signup-error');
+
+    try {
+      const name = nameInp ? nameInp.value.trim() : '';
+      const username = userInp ? userInp.value.trim() : '';
+      const pin = pinInp ? pinInp.value.trim() : '';
+      const role = roleInp ? roleInp.value : 'member';
+      const avatar = avatarInp ? avatarInp.value : '🫐';
+      const cal = calInp ? parseInt(calInp.value, 10) : 2100;
+      const p = protInp ? parseInt(protInp.value, 10) : 135;
+
+      if (!name) throw new Error('Please provide your name.');
+      if (!username) throw new Error('Please choose a username.');
+      if (!pin || pin.length < 4) throw new Error('PIN must be at least 4 digits.');
+
+      const newAccount = this.createAccount({
+        displayName: name,
+        username: username,
+        pin: pin,
+        role: role,
+        avatar: avatar,
+        startingGoalCalories: cal,
+        startingProteinGrams: p
+      });
+
+      if (errEl) errEl.classList.add('hidden');
+      this.unlockApp();
+    } catch (err) {
+      if (errEl) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+  },
+
+  switchLandingTab: function (tabName) {
+    const tabs = ['login', 'signup', 'profiles'];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`auth-landing-tab-${t}`);
+      const pane = document.getElementById(`auth-landing-pane-${t}`);
+      if (btn) {
+        if (t === tabName) {
+          btn.className = 'flex-1 py-3 rounded-2xl text-xs font-bold bg-pink-600 text-white shadow-lg shadow-pink-600/30 transition';
+        } else {
+          btn.className = 'flex-1 py-3 rounded-2xl text-xs font-semibold bg-berry-900/60 text-berry-300 hover:text-white transition';
+        }
+      }
+      if (pane) {
+        if (t === tabName) {
+          pane.classList.remove('hidden');
+          pane.style.display = 'block';
+        } else {
+          pane.classList.add('hidden');
+          pane.style.display = 'none';
+        }
+      }
+    });
+
+    if (tabName === 'profiles') {
+      this.renderLandingProfilesGrid();
+    }
+    this.renderLandingCapacityBadge();
+  },
+
+  renderLandingProfilesGrid: function () {
+    const container = document.getElementById('auth-landing-profiles-grid');
+    if (!container) return;
+
+    const accounts = this.getAccounts();
+    container.innerHTML = accounts.map(acc => {
+      const isAdmin = acc.role === 'admin';
+      return `
+        <div onclick="BerryPulseAuth.switchAccount('${acc.id}')" class="p-3.5 rounded-2xl bg-berry-900/60 hover:bg-berry-800 border border-berry-700/50 hover:border-pink-500/50 cursor-pointer transition flex items-center justify-between group shadow-sm">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">${acc.avatar || '👤'}</span>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm font-bold text-white group-hover:text-pink-300 transition">${acc.displayName}</span>
+                ${isAdmin ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">ADMIN</span>' : '<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">MEMBER</span>'}
+              </div>
+              <p class="text-xs text-berry-300/80 mt-0.5">@${acc.username} • PIN: <code class="text-pink-300">${acc.pin}</code></p>
+            </div>
+          </div>
+          <button type="button" class="px-3 py-1.5 rounded-xl bg-pink-600/30 group-hover:bg-pink-600 text-pink-300 group-hover:text-white text-xs font-bold transition">
+            Log In →
+          </button>
+        </div>
+      `;
+    }).join('');
+  },
+
+  renderLandingCapacityBadge: function () {
+    const accounts = this.getAccounts();
+    const remaining = this.MAX_ACCOUNTS - accounts.length;
+    const badge = document.getElementById('auth-landing-capacity-badge');
+    if (badge) {
+      badge.textContent = `${accounts.length} / ${this.MAX_ACCOUNTS} Accounts Active (${remaining} Slots Available)`;
+    }
+    const gateBadge = document.getElementById('auth-accounts-count-badge');
+    if (gateBadge) {
+      gateBadge.textContent = `${accounts.length} / ${this.MAX_ACCOUNTS} Accounts Active`;
     }
   },
 
